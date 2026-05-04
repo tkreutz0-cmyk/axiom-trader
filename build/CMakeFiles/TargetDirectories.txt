@@ -1,0 +1,3 @@
+/Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir
+/Users/tkreutz/axiom-trader/build/CMakeFiles/ALL_BUILD.dir
+/Users/tkreutz/axiom-trader/build/CMakeFiles/ZERO_CHECK.dir
