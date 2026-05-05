@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string>
 #include <filesystem>
+#include <vector>
+#include <cmath> // Für sin/cos
 
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
@@ -19,102 +21,52 @@
 namespace fs = std::filesystem;
 
 /* =========================
-   macOS paths (robust)
+   macOS Pfad-Helfer
    ========================= */
-static NSURL* AXIOMBaseURL_AppSupport()
-{
+static NSURL* AXIOMBaseURL_AppSupport() {
     NSFileManager* fm = [NSFileManager defaultManager];
-
-    // ~/Library/Application Support
-    NSURL* appSupport =
-        [fm URLsForDirectory:NSApplicationSupportDirectory
-                   inDomains:NSUserDomainMask].firstObject;
-
-    // ~/Library/Application Support/AXIOM
+    NSURL* appSupport = [fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
     NSURL* axiom = [appSupport URLByAppendingPathComponent:@"AXIOM" isDirectory:YES];
-
     NSError* err = nil;
-    BOOL ok = [fm createDirectoryAtURL:axiom
-           withIntermediateDirectories:YES
-                            attributes:nil
-                                 error:&err];
-
-    if (!ok) {
-        fprintf(stderr, "ERROR: createDirectory(AppSupport/AXIOM) failed: %s\n",
-                err ? err.localizedDescription.UTF8String : "unknown");
-        return nil;
-    }
+    if (![fm createDirectoryAtURL:axiom withIntermediateDirectories:YES attributes:nil error:&err]) return nil;
     return axiom;
 }
 
-static std::string URLToUTF8Path(NSURL* url)
-{
-    if (!url) return {};
-    return std::string(url.path.UTF8String);
+static std::string URLToUTF8Path(NSURL* url) {
+    return (url) ? std::string(url.path.UTF8String) : "";
 }
 
 /* =========================
-   Save Anchor (Black Box)
+   Projekt-Speicherlogik
    ========================= */
-static bool SaveProjectAnchor_NS(const std::string& projectFolderAbs, std::string& outError, std::string& outSavedFileAbs)
-{
+static bool SaveProjectAnchor_NS(const std::string& folder, std::string& outErr, std::string& outPath) {
     @autoreleasepool {
         NSFileManager* fm = [NSFileManager defaultManager];
-
-        NSURL* projURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String:projectFolderAbs.c_str()]
-                                    isDirectory:YES];
-
-        // Create folders: src, docs
+        NSURL* projURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String:folder.c_str()] isDirectory:YES];
         NSError* err = nil;
-        BOOL ok1 = [fm createDirectoryAtURL:[projURL URLByAppendingPathComponent:@"src" isDirectory:YES]
-                withIntermediateDirectories:YES attributes:nil error:&err];
-        if (!ok1) {
-            outError = std::string("createDirectory src failed: ") + (err ? err.localizedDescription.UTF8String : "unknown");
-            return false;
+        if (![fm createDirectoryAtURL:[projURL URLByAppendingPathComponent:@"src"] withIntermediateDirectories:YES attributes:nil error:&err]) {
+            outErr = err.localizedDescription.UTF8String; return false;
         }
-
-        err = nil;
-        BOOL ok2 = [fm createDirectoryAtURL:[projURL URLByAppendingPathComponent:@"docs" isDirectory:YES]
-                withIntermediateDirectories:YES attributes:nil error:&err];
-        if (!ok2) {
-            outError = std::string("createDirectory docs failed: ") + (err ? err.localizedDescription.UTF8String : "unknown");
-            return false;
-        }
-
-        // Write file
         NSString* content = @"AXIOM-TRADER-V0.1\nSTATUS: INITIALIZED\n";
-        NSURL* fileURL = [projURL URLByAppendingPathComponent:@"project.axiom" isDirectory:NO];
-
-        err = nil;
-        BOOL wrote = [content writeToURL:fileURL atomically:YES encoding:NSUTF8StringEncoding error:&err];
-        if (!wrote) {
-            outError = std::string("writeToURL failed: ") + (err ? err.localizedDescription.UTF8String : "unknown");
-            return false;
+        NSURL* fileURL = [projURL URLByAppendingPathComponent:@"project.axiom"];
+        if (![content writeToURL:fileURL atomically:YES encoding:NSUTF8StringEncoding error:&err]) {
+            outErr = err.localizedDescription.UTF8String; return false;
         }
-
-        outSavedFileAbs = URLToUTF8Path(fileURL);
+        outPath = URLToUTF8Path(fileURL);
         return true;
     }
 }
 
-/* =========================
-   Main
-   ========================= */
-int main(int, char**)
-{
+int main(int, char**) {
     if (!glfwInit()) return 1;
-
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(1280, 720, "AXIOM Trader v0.1", nullptr, nullptr);
-    if (!window) { glfwTerminate(); return 1; }
-
+    
     id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-    if (!device) { fprintf(stderr, "No Metal device.\n"); return 1; }
     id<MTLCommandQueue> commandQueue = [device newCommandQueue];
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOther(window, true);
     ImGui_ImplMetal_Init(device);
 
@@ -122,99 +74,83 @@ int main(int, char**)
     CAMetalLayer* layer = [CAMetalLayer layer];
     layer.device = device;
     layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-    layer.framebufferOnly = YES;
     nswin.contentView.wantsLayer = YES;
     nswin.contentView.layer = layer;
 
     MTLRenderPassDescriptor* rp = [MTLRenderPassDescriptor renderPassDescriptor];
-
-    // Default path: ~/Library/Application Support/AXIOM/my_trading_project
-    NSURL* baseURL = AXIOMBaseURL_AppSupport();
-    std::string baseAbs = URLToUTF8Path(baseURL);
-    std::string defaultProjectAbs = baseAbs.empty() ? std::string() : (baseAbs + "/my_trading_project");
-
+    std::string baseAbs = URLToUTF8Path(AXIOMBaseURL_AppSupport());
     static char projectPath[512];
-    snprintf(projectPath, sizeof(projectPath), "%s", defaultProjectAbs.c_str());
+    snprintf(projectPath, sizeof(projectPath), "%s/my_trading_project", baseAbs.c_str());
+    std::string lastStatus = "Bereit.";
 
-    std::string lastStatus = "Ready.";
-    std::string lastSavedFile = "";
-
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
-        @autoreleasepool
-        {
+        @autoreleasepool {
             CGSize size = nswin.contentView.bounds.size;
-            CGFloat scale = nswin.backingScaleFactor;
-            layer.drawableSize = CGSizeMake(size.width * scale, size.height * scale);
-
+            layer.drawableSize = CGSizeMake(size.width * nswin.backingScaleFactor, size.height * nswin.backingScaleFactor);
             id<CAMetalDrawable> drawable = [layer nextDrawable];
             if (!drawable) continue;
 
             rp.colorAttachments[0].texture = drawable.texture;
             rp.colorAttachments[0].loadAction = MTLLoadActionClear;
-            rp.colorAttachments[0].storeAction = MTLStoreActionStore;
-            rp.colorAttachments[0].clearColor = MTLClearColorMake(0.10, 0.10, 0.10, 1.0);
+            rp.colorAttachments[0].clearColor = MTLClearColorMake(0.08, 0.08, 0.1, 1.0);
 
             ImGui_ImplMetal_NewFrame(rp);
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            // 1. Fenster: Control
             ImGui::Begin("AXIOM Control");
-            ImGui::Text("Default Base (AppSupport):");
-            ImGui::TextWrapped("%s", baseAbs.c_str());
-
-            ImGui::Separator();
-            ImGui::InputText("Projektpfad (absolut empfohlen)", projectPath, IM_ARRAYSIZE(projectPath));
-
-            if (ImGui::Button("Projektanker speichern"))
-            {
-                std::string err, saved;
-                // Wenn User relativ eingibt: relativ -> an Base anhaengen (Finder-Start CWD ist unzuverlässig)
-                fs::path p(projectPath);
-                std::string targetAbs;
-
-                if (p.is_absolute() || baseAbs.empty()) {
-                    targetAbs = p.string();
-                } else {
-                    targetAbs = (fs::path(baseAbs) / p).string();
-                }
-
-                bool ok = SaveProjectAnchor_NS(targetAbs, err, saved);
-                if (ok) {
-                    lastStatus = "Saved OK.";
-                    lastSavedFile = saved;
-                    printf("SAVED: %s\n", saved.c_str());
-                } else {
-                    lastStatus = "Save FAILED: " + err;
-                    lastSavedFile.clear();
-                    fprintf(stderr, "%s\n", lastStatus.c_str());
-                }
+            ImGui::InputText("Pfad", projectPath, 512);
+            if (ImGui::Button("Speichern")) {
+                std::string err, path;
+                if (SaveProjectAnchor_NS(projectPath, err, path)) lastStatus = "OK: " + path;
+                else lastStatus = "Fehler: " + err;
             }
+            ImGui::Text("%s", lastStatus.c_str());
+            ImGui::End();
 
-            ImGui::Separator();
-            ImGui::TextWrapped("Status: %s", lastStatus.c_str());
-            if (!lastSavedFile.empty()) {
-                ImGui::TextWrapped("File: %s", lastSavedFile.c_str());
+            // 2. Fenster: DEIN NEUER DYNAMISCHER BLOCK
+            ImGui::Begin("AXIOM Needle-Dashboard Prototype");
+            {
+                ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                ImVec2 origin = ImGui::GetCursorScreenPos();
+                double time = ImGui::GetTime();
+
+                for (int i = 0; i < 7; i++) {
+                    float x_pos = origin.x + 50.0f + (i * 70.0f);
+                    float y_base = origin.y + 150.0f;
+                    
+                    float wave = (float)sin(time * 1.5f + i);
+                    float noise = 20.0f + (wave * 10.0f);
+                    float pnl = 30.0f + (float)cos(time * 0.8f + i) * 15.0f;
+
+                    bool is_hovered = ImGui::IsMouseHoveringRect(ImVec2(x_pos - 15, y_base - 40),
+                                                                 ImVec2(x_pos + 15, y_base + 60));
+                    
+                    ImU32 col_needle = is_hovered ? IM_COL32(255, 255, 255, 255) : IM_COL32(150, 150, 150, 200);
+                    ImU32 col_body   = (i % 2 == 0) ? IM_COL32(46, 204, 113, 200) : IM_COL32(231, 76, 60, 200);
+
+                    draw_list->AddLine(ImVec2(x_pos, y_base - noise),
+                                       ImVec2(x_pos, y_base + pnl + noise), col_needle, 1.0f);
+                    draw_list->AddRectFilled(ImVec2(x_pos - 10, y_base),
+                                             ImVec2(x_pos + 10, y_base + pnl), col_body, 3.0f);
+                    draw_list->AddCircleFilled(ImVec2(x_pos, y_base), 3.0f, IM_COL32(255, 255, 255, 255));
+                }
+                ImGui::Dummy(ImVec2(550, 300));
             }
             ImGui::End();
 
+            // Rendering
             ImGui::Render();
-
             id<MTLCommandBuffer> cb = [commandQueue commandBuffer];
-            id<MTLRenderCommandEncoder> enc = [cb renderCommandEncoderWithDescriptor:rp];
-            ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cb, enc);
-            [enc endEncoding];
+            id<MTLRenderCommandEncoder> ence = [cb renderCommandEncoderWithDescriptor:rp];
+            ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cb, ence);
+            [ence endEncoding];
             [cb presentDrawable:drawable];
             [cb commit];
         }
     }
-
-    ImGui_ImplMetal_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    glfwDestroyWindow(window);
-    glfwTerminate();
     return 0;
 }
 
