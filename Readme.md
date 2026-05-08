@@ -1,4 +1,4 @@
-# AXIOM-Trader (Alpha Snapshot v0.1)
+# AXIOM-Trader (Development Snapshot v0.4.0-alpha)
 
 A high-performance, deterministic trading journal for macOS, built with a "Desktop-First" philosophy.
 
@@ -6,25 +6,31 @@ A high-performance, deterministic trading journal for macOS, built with a "Deskt
 AXIOM-Trader follows the **"Blender Model"**: full UI sovereignty, zero App Store friction, and maximum performance. Unlike mobile-centric apps, this project treats macOS as a professional workstation, utilizing a hybrid C++20 and Metal API stack.
 
 ## 🛠 Technical Stack
-- **Core:** C++20 (deterministic simulation and logic)
-- **Graphics:** Metal API (Native Apple Silicon acceleration)
+- **Core:** C++20 (Deterministic simulation and logic)
+- **Graphics:** Metal API (Native Apple Silicon acceleration via Layer-Hosting)
+- **Geometry:** Custom Ear-Clipping Triangulation Engine for concave polygons.
 - **GUI:** Dear ImGui (Immediate Mode UI for high responsiveness)
 - **Windowing:** GLFW (Robust Cocoa integration)
 
-## 🏗 Architecture Highlight: The Hybrid Bridge
-To ensure professional standards on macOS (e.g., proper path handling in `~/Library/Application Support`), the project uses **Objective-C++ (.mm)** wrappers. This bridges the gap between C++ logic and native Foundation frameworks.
+## 🏗 Architecture Highlight: The AXIOM-Metal Bridge
+To ensure professional standards on macOS 15.x, the project uses a specialized **Layer-Hosting View** architecture. By strictly managing the `CAMetalLayer` within an Objective-C++ (`.mm`) wrapper, AXIOM achieves:
+- **Zero-Latency Rendering:** Direct access to the Apple Silicon GPU.
+- **Retina Precision:** Dynamic synchronization between `view.bounds` and `layer.drawableSize`.
+- **Persistence Foundation:** Proper path handling in `~/Library/Application Support`.
 
-## 📂 Current Features (Snapshot v0.1)
-- **SYNAPSE-Journal:** Manual trade entry system (Core Module 1).
-- **Needle-Dashboard:** Dynamic 2D-Canvas for trade visualization (Module 2).
-- **MacBook Pro Optimization:** Custom Trackpad-Handling for high-precision Panning and Zooming (`Option` + Scroll).
-- **DPI-Awareness:** Full Retina-display support via framebuffer scaling.
+## 📂 Current Features (Snapshot v0.4.0)
+- **SYNAPSE Master-Control:** Interactive trade entry and editing system with real-time state synchronization.
+- **AXIOM World Engine:** A high-fidelity vector world map with 2:1 aspect ratio correction (Letterboxing).
+- **Geometry Pipeline:** Automated vertex normalization and CCW-winding enforcement for artifact-free rendering.
+- **Chrono-Mapping:** Trades are visualized as geographic anchors on the world map based on UTC timestamps.
+- **DPI-Awareness:** Full Retina-display support with automated framebuffer scaling.
 
 ## 📝 Usage & Controls
-- **Pan:** Two-finger scroll on dashboard.
-- **Zoom:** `Option` (Alt) + Two-finger scroll.
-- **Add Trade:** Use the SYNAPSE-Journal window to push data to the core vector.
+- **Select Trade:** Click any entry in the Master Table to load data into the editor.
+- **Update/Edit:** Modify trade parameters and sync them back to the core vector.
+- **Pan/Zoom:** Two-finger scroll and `Option` + Scroll (Dashboard optimized).
+- **Status Monitoring:** Real-time UTC-time tracking via the "Global Session Monitor".
 
 ---
-**Status:** Milestone 5.2 (UI-Infrastructure & Canvas Alpha) complete.  
-**Next Up:** SYNAPSE-CPP Kernel & Y-Axis price transformation.
+**Status:** Milestone: Metal & Geometry Core Stable (v0.4.0) complete.  
+**Next Up:** Persistence Layer (SQLite) & Market Session Glow-Zones (LDN/NY/TYO).
