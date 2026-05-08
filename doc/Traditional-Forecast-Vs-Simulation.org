@@ -1,0 +1,79 @@
+#+TITLE: Comparison: Traditional Forecasting vs. AXIOM Simulation
+#+AUTHOR: Analysis Scenario: Product Line Budgeting
+#+DATE: [2026-04-05]
+
+* Scenario: Raw Material Price Shock & Currency Fluctuation
+  - *Baseline:* Purchasing price 100 €, planned margin 15%.
+  - *Shock:* Price rises to 130 €, EUR/USD exchange rate weakens.
+
+** 1. Traditional Forecast (Excel-based)
+   - *Logic:* Probabilistic / Formula-driven
+   - *Process:* 
+     1. Manual Input: 130 € is entered into cell B5.
+     2. Calculation: Excel calculates a new margin of 2%.
+     3. Visualization: Dashboard shows a red cell (Conditional Formatting).
+   - *Weaknesses:*
+     - [ ] **No Hard-Stop:** The critical value (2% margin) is saved in the system.
+     - [ ] **GIGO Effect:** Erroneous assumptions propagate unchecked.
+     - [ ] **Governance:** Manual approval processes required to catch "toxic" plans.
+
+** 2. AXIOM Architecture (ADN-based)
+   - *Logic:* Deterministic / Simulation-first
+   - *Process (ADN Node Logic):*
+     - *Input (I):* Price vector, FX-rate [0.92].
+     - *Transformation (T):* $f(I) = (Sales - (I_{price} * FX)) / Sales$
+     - *Constraint (C):* $\text{Margin} \ge 0.05$ (Corporate mandate).
+     - *Output (O):* **Governance Exception** (since 0.02 < 0.05).
+   - *Strengths:*
+     - [X] **Blocked Write-Back:** Prevents non-compliant data from entering SAP S/4HANA.
+     - [X] **Compliance-by-Design:** Invariants (e.g., liquidity) are enforced at runtime.
+     - [X] **Clean Core:** Only validated system states reach the database.
+
+** Comparison Table
+
+| Feature              | Excel / Forecast | AXIOM Simulation       |
+|----------------------+------------------+------------------------|
+| Decision Type        | Reactive         | Proactive (by Design)  |
+| Data Integrity       | Manual Check     | Enforced at Computation |
+| Error Propagation    | High             | Blocked                |
+| Focus                | "What happens?"  | "What is permitted?"   |
+
+#+BEGIN_QUOTE
+"AXIOM acts as a digital immune system: it prevents the 'virus' of 
+non-compliant planning from ever entering the corporate core."
+#+END_QUOTE
+
+* Architecture Implications for AXIOM Trader
+
+** Deterministic vs. Probabilistic
+   - Traditional forecasting operates in a *probabilistic* space: "given these assumptions, here's a distribution of outcomes."
+   - AXIOM operates in a *deterministic* space: "given these constraints, here are the *permitted* outcomes."
+   - This shift is foundational to why AXIOM can enforce compliance at the point of calculation.
+
+** Synapse-Journal & Needle-Dashboard Integration
+   - **Synapse-Journal** (trading journal core):
+     - Records all trading events with full audit trail.
+     - Each journal entry is validated against corporate invariants *before* persistence.
+     - Acts as the source of truth for compliance state.
+   
+   - **Needle-Dashboard** (visualization layer):
+     - Displays only *valid* system states.
+     - No conditional formatting workarounds; constraints are native to the data model.
+     - Provides real-time exception alerts for out-of-bounds conditions.
+
+** Implementation Strategy
+   - Invariants are encoded as first-class constraints in the ADN node logic.
+   - GUI controls (via Objective-C++ native layer) bind directly to constraint validators.
+   - Zero tolerance for "yellow flag" states—only green (compliant) or red (exception/blocked).
+
+* Key Takeaways
+
+1. **Governance-by-Architecture:** Compliance is not a post-processing layer; it's built into the simulation engine.
+2. **Clean Data Pipeline:** Only validated data reaches persistent storage (Synapse-Journal).
+3. **User Experience:** The dashboard never shows invalid states; exceptions are handled at the input stage.
+4. **Enterprise-Ready:** AXIOM's approach aligns with modern data governance frameworks (FAIR, governance-as-code).
+
+* Related Documentation
+  - See also: [[./architecture-overview.org][Architecture Overview]]
+  - See also: [[./adn-node-specification.org][ADN Node Specification]]
+  - See also: [[../decisions/][Architecture Decision Records]]
