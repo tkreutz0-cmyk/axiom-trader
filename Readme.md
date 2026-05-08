@@ -1,34 +1,30 @@
-# AXIOM Trader - Technisches Logbuch
+# AXIOM-Trader (Alpha Snapshot v0.1)
 
-## Projekt-Status: v0.1-alpha "Base Canvas"
+A high-performance, deterministic trading journal for macOS, built with a "Desktop-First" philosophy.
 
-### System-Architektur
-Das System basiert auf einem deterministischen Ansatz (Blender-Modell) und nutzt ein natives macOS-Backend für maximale Performance bei der Datenvisualisierung.
+## 🚀 The Vision
+AXIOM-Trader follows the **"Blender Model"**: full UI sovereignty, zero App Store friction, and maximum performance. Unlike mobile-centric apps, this project treats macOS as a professional workstation, utilizing a hybrid C++20 and Metal API stack.
 
-- **Frontend:** Dear ImGui mit Metal-Backend.
-- **Windowing:** GLFW (DPI-aware für Retina-Displays).
-- **Interaktions-Modell:** Optimiert für MacBook Pro (Trackpad-gesteuert).
+## 🛠 Technical Stack
+- **Core:** C++20 (deterministic simulation and logic)
+- **Graphics:** Metal API (Native Apple Silicon acceleration)
+- **GUI:** Dear ImGui (Immediate Mode UI for high responsiveness)
+- **Windowing:** GLFW (Robust Cocoa integration)
 
-### Aktueller Build-Stand
-- [x] Metal-Renderer Initialisierung
-- [x] Retina-Auflösung Support (Framebuffer-Skalierung)
-- [x] Modul 1: SYNAPSE-Journal (Eingabemaske für Real-Daten)
-- [x] Modul 2: Needle-Dashboard (Dynamisches Canvas mit Pan & Zoom)
-- [x] Callback-Handling via `ImGui_ImplGlfw_InstallCallbacks`
+## 🏗 Architecture Highlight: The Hybrid Bridge
+To ensure professional standards on macOS (e.g., proper path handling in `~/Library/Application Support`), the project uses **Objective-C++ (.mm)** wrappers. This bridges the gap between C++ logic and native Foundation frameworks.
 
-### Steuerung (MacBook Pro)
+## 📂 Current Features (Snapshot v0.1)
+- **SYNAPSE-Journal:** Manual trade entry system (Core Module 1).
+- **Needle-Dashboard:** Dynamic 2D-Canvas for trade visualization (Module 2).
+- **MacBook Pro Optimization:** Custom Trackpad-Handling for high-precision Panning and Zooming (`Option` + Scroll).
+- **DPI-Awareness:** Full Retina-display support via framebuffer scaling.
 
-| Aktion | Geste |
-| :--- | :--- |
-| **Verschieben (Pan)** | Zwei-Finger-Scroll auf dem Dashboard |
-| **Zoomen** | `Option` (Alt) + Zwei-Finger-Scroll |
-| **Fenster bewegen** | Klick & Drag auf die Titelleiste |
-| **Eingabe** | Direkte Tastatureingabe im Journal-Fenster |
-
-### Nächste Meilensteine
-1. **Y-Achsen-Transformation:** Mapping von Welt-Koordinaten (Preis-Level) auf Bildschirm-Pixel.
-2. **Persistence Layer:** Re-Integration der SQLite-Engine (Modul 2.3).
-3. **SYNAPSE-Core:** Implementierung der mathematischen P&L-Berechnung in C++.
+## 📝 Usage & Controls
+- **Pan:** Two-finger scroll on dashboard.
+- **Zoom:** `Option` (Alt) + Two-finger scroll.
+- **Add Trade:** Use the SYNAPSE-Journal window to push data to the core vector.
 
 ---
-*Letzter Commit-Stand: Core-UI & Dashboard stabil.*
+**Status:** Milestone 5.2 (UI-Infrastructure & Canvas Alpha) complete.  
+**Next Up:** SYNAPSE-CPP Kernel & Y-Axis price transformation.
