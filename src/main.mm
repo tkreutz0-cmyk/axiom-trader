@@ -1,9 +1,8 @@
 // axiom_trader.mm
 #include <stdio.h>
 #include <string>
-#include <filesystem>
 #include <vector>
-#include <cmath> // Für sin/cos
+#include <cmath>
 
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
@@ -18,56 +17,35 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
 
-namespace fs = std::filesystem;
+enum class TradeStatus { PLANNED = 0, REALIZED = 1 };
 
-/* =========================
-   macOS Pfad-Helfer
-   ========================= */
-static NSURL* AXIOMBaseURL_AppSupport() {
-    NSFileManager* fm = [NSFileManager defaultManager];
-    NSURL* appSupport = [fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
-    NSURL* axiom = [appSupport URLByAppendingPathComponent:@"AXIOM" isDirectory:YES];
-    NSError* err = nil;
-    if (![fm createDirectoryAtURL:axiom withIntermediateDirectories:YES attributes:nil error:&err]) return nil;
-    return axiom;
-}
-
-static std::string URLToUTF8Path(NSURL* url) {
-    return (url) ? std::string(url.path.UTF8String) : "";
-}
-
-/* =========================
-   Projekt-Speicherlogik
-   ========================= */
-static bool SaveProjectAnchor_NS(const std::string& folder, std::string& outErr, std::string& outPath) {
-    @autoreleasepool {
-        NSFileManager* fm = [NSFileManager defaultManager];
-        NSURL* projURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String:folder.c_str()] isDirectory:YES];
-        NSError* err = nil;
-        if (![fm createDirectoryAtURL:[projURL URLByAppendingPathComponent:@"src"] withIntermediateDirectories:YES attributes:nil error:&err]) {
-            outErr = err.localizedDescription.UTF8String; return false;
-        }
-        NSString* content = @"AXIOM-TRADER-V0.1\nSTATUS: INITIALIZED\n";
-        NSURL* fileURL = [projURL URLByAppendingPathComponent:@"project.axiom"];
-        if (![content writeToURL:fileURL atomically:YES encoding:NSUTF8StringEncoding error:&err]) {
-            outErr = err.localizedDescription.UTF8String; return false;
-        }
-        outPath = URLToUTF8Path(fileURL);
-        return true;
-    }
-}
+struct AxiomTrade {
+    std::string symbol;
+    double entryPrice;
+    double exitPrice;
+    TradeStatus status;
+    ImU32 colEntry = IM_COL32(0, 122, 255, 255);
+    ImU32 colExit = IM_COL32(255, 59, 48, 255);
+    ImU32 colPlanned = IM_COL32(255, 204, 0, 255);
+};
 
 int main(int, char**) {
     if (!glfwInit()) return 1;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "AXIOM Trader v0.1", nullptr, nullptr);
+    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
     
+    GLFWwindow* window = glfwCreateWindow(1440, 900, "AXIOM Trader v0.1", nullptr, nullptr);
+    if (!window) return 1;
+
     id<MTLDevice> device = MTLCreateSystemDefaultDevice();
     id<MTLCommandQueue> commandQueue = [device newCommandQueue];
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    
+    // Initialisierung mit modernem Callback-Helper
     ImGui_ImplGlfw_InitForOther(window, true);
+    ImGui_ImplGlfw_InstallCallbacks(window);
     ImGui_ImplMetal_Init(device);
 
     NSWindow* nswin = glfwGetCocoaWindow(window);
@@ -77,80 +55,123 @@ int main(int, char**) {
     nswin.contentView.wantsLayer = YES;
     nswin.contentView.layer = layer;
 
-    MTLRenderPassDescriptor* rp = [MTLRenderPassDescriptor renderPassDescriptor];
-    std::string baseAbs = URLToUTF8Path(AXIOMBaseURL_AppSupport());
-    static char projectPath[512];
-    snprintf(projectPath, sizeof(projectPath), "%s/my_trading_project", baseAbs.c_str());
-    std::string lastStatus = "Bereit.";
+    // Aktuell flüchtiger Speicher (Vektor)
+    std::vector<AxiomTrade> my_trades = {
+        {"BTC/USD", 60000.0, 64000.0, TradeStatus::REALIZED},
+        {"ETH/USD", 3200.0, 3100.0, TradeStatus::REALIZED}
+    };
+
+    static ImVec2 scrolling = ImVec2(0.0f, 0.0f);
+    static float zoom = 1.0f;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        layer.drawableSize = CGSizeMake(width, height);
+
         @autoreleasepool {
-            CGSize size = nswin.contentView.bounds.size;
-            layer.drawableSize = CGSizeMake(size.width * nswin.backingScaleFactor, size.height * nswin.backingScaleFactor);
+            MTLRenderPassDescriptor* rp = [MTLRenderPassDescriptor renderPassDescriptor];
             id<CAMetalDrawable> drawable = [layer nextDrawable];
             if (!drawable) continue;
 
             rp.colorAttachments[0].texture = drawable.texture;
             rp.colorAttachments[0].loadAction = MTLLoadActionClear;
-            rp.colorAttachments[0].clearColor = MTLClearColorMake(0.08, 0.08, 0.1, 1.0);
+            rp.colorAttachments[0].clearColor = MTLClearColorMake(0.01, 0.01, 0.02, 1.0);
 
             ImGui_ImplMetal_NewFrame(rp);
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            // 1. Fenster: Control
-            ImGui::Begin("AXIOM Control");
-            ImGui::InputText("Pfad", projectPath, 512);
-            if (ImGui::Button("Speichern")) {
-                std::string err, path;
-                if (SaveProjectAnchor_NS(projectPath, err, path)) lastStatus = "OK: " + path;
-                else lastStatus = "Fehler: " + err;
+            // 1. SYNAPSE-JOURNAL (Eingabe)
+            ImGui::SetNextWindowPos(ImVec2(20, 50), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSize(ImVec2(320, 350), ImGuiCond_FirstUseEver);
+            ImGui::Begin("SYNAPSE-Journal");
+            {
+                static char buf_symbol[64] = "BTC/USD";
+                static double val_entry = 60000.0;
+                static double val_exit = 61000.0;
+                static int status_idx = 1;
+                const char* status_names[] = { "Geplant", "Realisiert" };
+
+                ImGui::InputText("Instrument", buf_symbol, 64);
+                ImGui::InputDouble("Einstieg", &val_entry);
+                if (status_idx == 1) ImGui::InputDouble("Ausstieg", &val_exit);
+                ImGui::Combo("Status", &status_idx, status_names, 2);
+
+                if (ImGui::Button("Trade hinzufügen", ImVec2(-1, 40))) {
+                    AxiomTrade nt;
+                    nt.symbol = buf_symbol;
+                    nt.entryPrice = val_entry;
+                    nt.exitPrice = (status_idx == 1) ? val_exit : 0.0;
+                    nt.status = (status_idx == 1) ? TradeStatus::REALIZED : TradeStatus::PLANNED;
+                    my_trades.push_back(nt);
+                }
             }
-            ImGui::Text("%s", lastStatus.c_str());
             ImGui::End();
 
-            // 2. Fenster: DEIN NEUER DYNAMISCHER BLOCK
-            ImGui::Begin("AXIOM Needle-Dashboard Prototype");
+            // 2. AXIOM DASHBOARD (Visualisierung)
+            ImGui::SetNextWindowPos(ImVec2(360, 50), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSize(ImVec2(1000, 800), ImGuiCond_FirstUseEver);
+            ImGui::Begin("AXIOM Dashboard");
             {
+                ImVec2 p0 = ImGui::GetCursorScreenPos();
+                ImVec2 sz = ImGui::GetContentRegionAvail();
+                ImVec2 p1 = ImVec2(p0.x + sz.x, p0.y + sz.y);
+
                 ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                ImVec2 origin = ImGui::GetCursorScreenPos();
-                double time = ImGui::GetTime();
+                draw_list->AddRectFilled(p0, p1, IM_COL32(10, 10, 15, 255));
 
-                for (int i = 0; i < 7; i++) {
-                    float x_pos = origin.x + 50.0f + (i * 70.0f);
-                    float y_base = origin.y + 150.0f;
-                    
-                    float wave = (float)sin(time * 1.5f + i);
-                    float noise = 20.0f + (wave * 10.0f);
-                    float pnl = 30.0f + (float)cos(time * 0.8f + i) * 15.0f;
-
-                    bool is_hovered = ImGui::IsMouseHoveringRect(ImVec2(x_pos - 15, y_base - 40),
-                                                                 ImVec2(x_pos + 15, y_base + 60));
-                    
-                    ImU32 col_needle = is_hovered ? IM_COL32(255, 255, 255, 255) : IM_COL32(150, 150, 150, 200);
-                    ImU32 col_body   = (i % 2 == 0) ? IM_COL32(46, 204, 113, 200) : IM_COL32(231, 76, 60, 200);
-
-                    draw_list->AddLine(ImVec2(x_pos, y_base - noise),
-                                       ImVec2(x_pos, y_base + pnl + noise), col_needle, 1.0f);
-                    draw_list->AddRectFilled(ImVec2(x_pos - 10, y_base),
-                                             ImVec2(x_pos + 10, y_base + pnl), col_body, 3.0f);
-                    draw_list->AddCircleFilled(ImVec2(x_pos, y_base), 3.0f, IM_COL32(255, 255, 255, 255));
+                ImGui::InvisibleButton("canvas_btn", sz);
+                if (ImGui::IsItemHovered()) {
+                    if (ImGui::GetIO().KeyAlt) {
+                        zoom += ImGui::GetIO().MouseWheel * 0.05f * zoom;
+                        if (zoom < 0.01f) zoom = 0.01f;
+                    } else {
+                        scrolling.x += ImGui::GetIO().MouseWheelH * 60.0f;
+                        scrolling.y += ImGui::GetIO().MouseWheel * 60.0f;
+                    }
                 }
-                ImGui::Dummy(ImVec2(550, 300));
+
+                ImVec2 origin = ImVec2(p0.x + scrolling.x, p0.y + scrolling.y);
+                draw_list->PushClipRect(p0, p1, true);
+                
+                for (size_t n = 0; n < my_trades.size(); n++) {
+                    const auto& t = my_trades[n];
+                    float x = origin.x + (n * 150.0f * zoom);
+                    float y_mid = origin.y + (sz.y / 2.0f);
+
+                    if (t.status == TradeStatus::REALIZED) {
+                        float y_e = y_mid - (float)(t.exitPrice - t.entryPrice) * 0.05f * zoom;
+                        draw_list->AddLine(ImVec2(x, y_mid), ImVec2(x, y_e), IM_COL32(180, 180, 180, 255), 2.0f);
+                        draw_list->AddCircleFilled(ImVec2(x, y_mid), 6.0f * zoom, t.colEntry);
+                        draw_list->AddCircleFilled(ImVec2(x, y_e), 6.0f * zoom, t.colExit);
+                    } else {
+                        draw_list->AddTriangleFilled(ImVec2(x, y_mid-8*zoom), ImVec2(x-8*zoom, y_mid+8*zoom), ImVec2(x+8*zoom, y_mid+8*zoom), t.colPlanned);
+                    }
+                    draw_list->AddText(NULL, 15.0f * zoom, ImVec2(x + 10, y_mid), IM_COL32_WHITE, t.symbol.c_str());
+                }
+                draw_list->PopClipRect();
             }
             ImGui::End();
 
             // Rendering
             ImGui::Render();
             id<MTLCommandBuffer> cb = [commandQueue commandBuffer];
-            id<MTLRenderCommandEncoder> ence = [cb renderCommandEncoderWithDescriptor:rp];
-            ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cb, ence);
-            [ence endEncoding];
+            id<MTLRenderCommandEncoder> enc = [cb renderCommandEncoderWithDescriptor:rp];
+            ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cb, enc);
+            [enc endEncoding];
             [cb presentDrawable:drawable];
             [cb commit];
         }
     }
+    
+    ImGui_ImplMetal_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    
     return 0;
 }
 
