@@ -7,30 +7,31 @@ AXIOM-Trader follows the **"Blender Model"**: full UI sovereignty, zero App Stor
 
 ## 🛠 Technical Stack
 - **Core:** C++20 (Deterministic simulation and logic)
-- **Graphics:** Metal API (Native Apple Silicon acceleration via Layer-Hosting)
-- **Geometry:** Custom Ear-Clipping Triangulation Engine for concave polygons.
-- **GUI:** Dear ImGui (Immediate Mode UI for high responsiveness)
-- **Windowing:** GLFW (Robust Cocoa integration)
-
-## 🏗 Architecture Highlight: The AXIOM-Metal Bridge
-To ensure professional standards on macOS 15.x, the project uses a specialized **Layer-Hosting View** architecture. By strictly managing the `CAMetalLayer` within an Objective-C++ (`.mm`) wrapper, AXIOM achieves:
-- **Zero-Latency Rendering:** Direct access to the Apple Silicon GPU.
-- **Retina Precision:** Dynamic synchronization between `view.bounds` and `layer.drawableSize`.
-- **Persistence Foundation:** Proper path handling in `~/Library/Application Support`.
+- **Graphics:** Metal API (Native Apple Silicon acceleration via `CAMetalLayer` Hosting)
+- **GUI:** Dear ImGui (v1.9x) + GLFW
+- **Architecture:** Specialized **Layer-Hosting View** for Zero-Latency Rendering.
 
 ## 📂 Current Features (Snapshot v0.4.0)
-- **SYNAPSE Master-Control:** Interactive trade entry and editing system with real-time state synchronization.
-- **AXIOM World Engine:** A high-fidelity vector world map with 2:1 aspect ratio correction (Letterboxing).
-- **Geometry Pipeline:** Automated vertex normalization and CCW-winding enforcement for artifact-free rendering.
-- **Chrono-Mapping:** Trades are visualized as geographic anchors on the world map based on UTC timestamps.
-- **DPI-Awareness:** Full Retina-display support with automated framebuffer scaling.
+- **AXIOM World Engine:** 
+    - **Geospatial Mapping:** Core database for global trading hubs (NYC, LDN, FRA, TYO, SYD).
+    - **Symbol-Interaction:** High-precision hit-detection (Euclidean distance check) for direct "Load-to-Edit" workflows.
+    - **Visual Hashing:** Consistent asset-coloring via symbol-based procedural hashing.
+- **SYNAPSE Master-Control:** 
+    - Integrated CRUD-system for trade management.
+    - Directional UI cues: **LONG (▲)** and **SHORT (▼)**.
+- **Layout Manager:** Integrated grid-reset logic to maintain workstation workspace stability.
+- **Retina Precision:** Synchronized framebuffer scaling against UI blur and freezing.
 
-## 📝 Usage & Controls
-- **Select Trade:** Click any entry in the Master Table to load data into the editor.
-- **Update/Edit:** Modify trade parameters and sync them back to the core vector.
-- **Pan/Zoom:** Two-finger scroll and `Option` + Scroll (Dashboard optimized).
-- **Status Monitoring:** Real-time UTC-time tracking via the "Global Session Monitor".
+## 🐛 Recent Hotfixes (v0.4.0)
+- Fixed **Event-Occlusion** in trade tables via improved ID-scoping.
+- Resolved **Memory Overflows** in string buffering using safe `snprintf` handling.
+- Stabilized **Metal Render Pass** descriptors via explicit index addressing.
+
+## 📅 Roadmap (v0.5.x)
+- [ ] **Infrastructure:** SQLite-Integration for deterministic trade persistence.
+- [ ] **Visuals:** `stb_image.h` integration for high-res PNG map textures.
+- [ ] **Analytics:** Real-time global PnL aggregation and equity curve visualization.
 
 ---
-**Status:** Milestone: Metal & Geometry Core Stable (v0.4.0) complete.  
-**Next Up:** Persistence Layer (SQLite) & Market Session Glow-Zones (LDN/NY/TYO).
+**Status:** `Checkpoint v0.4.0-alpha - Build Stable`  
+**Platform:** macOS 15.x (Apple Silicon Optimized)
