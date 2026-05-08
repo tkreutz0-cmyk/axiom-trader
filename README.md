@@ -1,4 +1,18 @@
-# AXIOM-Trader (Development Snapshot v35.0)
+# AXIOM-Trader (Development Snapshot v0.4.0-alpha)
+...
+## 📂 Current Features (Snapshot v0.4.0)
+Verwende Code mit Vorsicht.Für das BUILD_LOG.md:markdown# AXIOM TRADER - Project Build Log
+
+## DATEI-INFO
+*   **Projektname:** AXIOM Trader
+*   **Version:** v0.4.0-alpha (Milestone: Metal & Geometry Stable)
+Verwende Code mit Vorsicht.Für den Git-Kommentar (angepasst):bashgit commit -m "feat: stabilize Metal core & add interactive trading journal v0.4.0-alpha
+
+- Fix: Critical macOS 15 black screen via layer-hosting synchronization
+- Engine: New Ear-Clipping triangulation & normalization pipeline
+- World: Aspect-ratio corrected high-fidelity vector map
+- UI: Interactive trade editing & UTC-chrono mapping"
+Verwende Code mit Vorsicht.Sollen wir als nächsten Schritt die Markt-Sessions (London/NY Glow-Zonen) angehen, um die v0.4.x-Reihe abzuschließen?KI-Antworten können Fehler enthalten. Weitere InformationenFrage dazu stellen
 
 A high-performance, deterministic trading journal for macOS, built with a "Desktop-First" philosophy.
 
