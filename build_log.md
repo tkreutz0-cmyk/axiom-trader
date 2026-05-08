@@ -2,40 +2,45 @@
 
 ## DATEI-INFO
 *   **Projektname:** AXIOM Trader
-*   **Version:** v35.0 (Consolidated Interactive Release)
+*   **Version:** v0.4.0-alpha (Milestone: Metal & Geometry Core Stable)
 *   **Plattform:** macOS 15.x (Apple Silicon / Intel)
-*   **Tech-Stack:** C++, Dear ImGui, Metal, GLFW, Objective-C++ (Cocoa)
+*   **Tech-Stack:** C++20, Dear ImGui, Metal API, GLFW, Objective-C++ (Foundation)
 
 ---
 
-## AKTUELLE MEILENSTEINE (Stand Build v35.0)
+## AKTUELLE MEILENSTEINE (Stand Build v0.4.0)
 
 ### 1. Metal & Cocoa Stabilitäts-Kern
-*   **Layer-Hosting Fix:** Umstellung auf ein echtes `Layer-Hosting` Modell. Die Reihenfolge der Initialisierung wurde als kritisch identifiziert:
+*   **Layer-Hosting Fix:** Umstellung auf ein explizites `Layer-Hosting` Modell. Die Initialisierungsreihenfolge wurde stabilisiert:
     1. `[view setLayer:layer]`
     2. `[view setWantsLayer:YES]`
-*   **Retina Synchronization:** Implementierung einer robusten Synchronisation zwischen `view.bounds` (Punkte) und `layer.drawableSize` (Pixel) unter Einbeziehung des `backingScaleFactor`. Behebt den "Black Screen" Fehler bei Fenster-Resizing.
+*   **Retina Synchronization:** Dynamische Koppelung von `view.bounds` und `layer.drawableSize` unter Berücksichtigung des `backingScaleFactor`. Beseitigung von Unschärfe und Black-Screen-Artefakten.
 
 ### 2. Geometry & World Engine
-*   **Ear-Clipping Engine:** Eigene Triangulations-Logik zur Füllung konkaver Polygone (z.B. Eurasien-Kontinent).
-*   **Normalization Pipeline:** Automatisches Entfernen von redundanten Endpunkten (first == last) und Erzwingen der CCW-Winding-Order zur Vermeidung von Artefakten ("Knubbeln") an Nahtstellen.
-*   **Aspect Ratio Correction:** Implementierung einer Letterbox-Logik, die die Weltkarte starr im 2:1 Format hält, unabhängig von der Fenstergröße des Widgets.
+*   **Ear-Clipping Engine:** Implementierung eines robusten Ear-Clipping-Algorithmus zur fehlerfreien Triangulation konkaver Polygone (Eurasien/Afrika).
+*   **Normalization Pipeline:** Automatisierte Säuberung der Vertex-Daten (Entfernung redundanter Endpunkte, Erzwingen der CCW-Winding-Order). Behebt Linien-Artefakte ("Knubbel") an Nahtstellen.
+*   **Aspect Ratio Guard:** Proportionale 2:1 Skalierung der Weltkarte mit Letterboxing innerhalb des Widget-Containers.
 
 ### 3. SYNAPSE Master-Control
-*   **Interactive Editing:** Implementierung eines State-Systems. Das Anklicken eines Eintrags in der Tabelle lädt die Daten (Asset, Preise) zurück in die Master-Eingabemaske für Updates.
-*   **Chrono-Mapping:** Verknüpfung der Trades mit der Weltkarte basierend auf UTC-Zeitstempeln.
+*   **Interactive State Engine:** Bidirektionale Verknüpfung von Tabelle und Editor. Selektion eines Eintrags lädt den Status direkt in die Master-Eingabemaske (Load-to-Edit).
+*   **UTC Chrono-Mapping:** Verknüpfung der Trades mit geographischen Ankern basierend auf zeitgestempelten UTC-Daten.
 
 ---
 
 ## GELÖSTE KRITISCHE BUGS
-*   **[BUG] Black Screen after First Frame:** Gelöst durch expliziten Zugriff auf `rp.colorAttachments[0].texture` und korrekte Hosting-Reihenfolge in Cocoa.
-*   **[BUG] Stonehenge Map:** Abstrakt-geometrische Landmassen durch hochaufgelöste Vektor-Pfade und Triangulation ersetzt.
-*   **[BUG] Map Distortion:** Behoben durch manuelle Berechnung des Proportional-Canvas innerhalb der `RenderAxiomWorld`.
-*   **[BUG] Metal Selector Error:** Behoben durch explizite Typisierung des `MTLRenderCommandEncoder` im Objective-C++ Kontext.
+*   **[RENDER] Black Screen:** Behoben durch explizite Adressierung von `rp.colorAttachments[0].texture` und korrektem Cocoa-Hosting.
+*   **[GEOM] Stonehenge-Artifacts:** Abstrakte Umrisse durch High-Fidelity Vektorpfade mit aktiver Triangulation ersetzt.
+*   **[UI] Focus Lock:** Fokus-Steuerung bei "GOTO"-Befehlen entkoppelt, um flüssiges Editieren zu ermöglichen.
 
 ---
 
-## BACKLOG / NÄCHSTE SCHRITTE
-- [ ] **Modul: Markt-Sessions:** London/NY/Tokio Glow-Zonen auf Weltkarte.
-- [ ] **Modul: Persistence:** SQLite-Anbindung zur Trade-Speicherung.
-- [ ] **Chrono-X Charts:** Asset-Fenster mit zeitlich korrekt skalierten X-Achsen.
+## BACKLOG & ROADMAP
+
+### Modul: Visual-Advanced (v0.4.x)
+- [ ] **Market Session Zones:** Integration von LDN/NY/TYO Handelszeiten als semitransparente Glow-Bänder hinter der Weltkarte.
+- [ ] **Day/Night Terminator:** Implementierung der mathematischen Schattenlinie basierend auf dem aktuellen Sonnenstand.
+- [ ] **Chrono-X Needles:** Re-Integration der Asset-Charts mit zeitlich proportional skalierten X-Achsen.
+
+### Modul: Infrastructure (v0.5.x)
+- [ ] **Persistence Layer:** SQLite-Integration für deterministische Datenspeicherung in `~/Library/Application Support/AXIOM`.
+- [ ] **Trade History CSV-Export:** Modul für den Datenexport zu Analysezwecken.
