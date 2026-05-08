@@ -1,46 +1,50 @@
-# AXIOM TRADER - Project Build Log
+# AXIOM TRADER - Build Log
 
-## DATEI-INFO
-*   **Projektname:** AXIOM Trader
-*   **Version:** v0.4.0-alpha (Milestone: Metal & Geometry Core Stable)
-*   **Plattform:** macOS 15.x (Apple Silicon / Intel)
-*   **Tech-Stack:** C++20, Dear ImGui, Metal API, GLFW, Objective-C++ (Foundation)
+## Projekt-Status: v0.4.0-alpha
+**Milestone:** Interaktive World-Engine & Layout-Stabilisierung  
+**Datum:** Freitag, Abschluss Woche 1  
 
 ---
 
-## AKTUELLE MEILENSTEINE (Stand Build v0.4.0)
-
-### 1. Metal & Cocoa Stabilitäts-Kern
-*   **Layer-Hosting Fix:** Umstellung auf ein explizites `Layer-Hosting` Modell. Die Initialisierungsreihenfolge wurde stabilisiert:
-    1. `[view setLayer:layer]`
-    2. `[view setWantsLayer:YES]`
-*   **Retina Synchronization:** Dynamische Koppelung von `view.bounds` und `layer.drawableSize` unter Berücksichtigung des `backingScaleFactor`. Beseitigung von Unschärfe und Black-Screen-Artefakten.
-
-### 2. Geometry & World Engine
-*   **Ear-Clipping Engine:** Implementierung eines robusten Ear-Clipping-Algorithmus zur fehlerfreien Triangulation konkaver Polygone (Eurasien/Afrika).
-*   **Normalization Pipeline:** Automatisierte Säuberung der Vertex-Daten (Entfernung redundanter Endpunkte, Erzwingen der CCW-Winding-Order). Behebt Linien-Artefakte ("Knubbel") an Nahtstellen.
-*   **Aspect Ratio Guard:** Proportionale 2:1 Skalierung der Weltkarte mit Letterboxing innerhalb des Widget-Containers.
-
-### 3. SYNAPSE Master-Control
-*   **Interactive State Engine:** Bidirektionale Verknüpfung von Tabelle und Editor. Selektion eines Eintrags lädt den Status direkt in die Master-Eingabemaske (Load-to-Edit).
-*   **UTC Chrono-Mapping:** Verknüpfung der Trades mit geographischen Ankern basierend auf zeitgestempelten UTC-Daten.
+## 🛠 Tech-Stack & Umgebung
+- **OS:** macOS 15.x (Apple Silicon Optimized)
+- **Grafik-API:** Metal (CAMetalLayer Hosting)
+- **UI-Framework:** Dear ImGui (v1.9x) + GLFW
+- **Sprachstandard:** C++20 / Objective-C++
+- **Build-System:** CMake (Xcode-Bundle Generation)
 
 ---
 
-## GELÖSTE KRITISCHE BUGS
-*   **[RENDER] Black Screen:** Behoben durch explizite Adressierung von `rp.colorAttachments[0].texture` und korrektem Cocoa-Hosting.
-*   **[GEOM] Stonehenge-Artifacts:** Abstrakte Umrisse durch High-Fidelity Vektorpfade mit aktiver Triangulation ersetzt.
-*   **[UI] Focus Lock:** Fokus-Steuerung bei "GOTO"-Befehlen entkoppelt, um flüssiges Editieren zu ermöglichen.
+## ✅ Erreichte Meilensteine (Sprint v0.4.0)
+
+### 1. Interaktives World-Monitoring
+- **Geospatial Mapping:** Koordinaten-Datenbank für globale Handelsplätze (NYC, LDN, FRA, TYO, SYD).
+- **Symbol-Interaction:** Hit-Detection auf der Karte (Pythagoras-Distanz-Check). Klicks laden Daten direkt in die Master-Eingabemaske (Load-to-Edit).
+- **Directional Graphics:** Visuelle Unterscheidung: LONG (▲) / SHORT (▼).
+- **Asset-Hashing:** Automatisierte Farbgeneierung basierend auf dem Asset-Symbol für konsistente Optik.
+
+### 2. Layout & UX Stabilität
+- **Window Management:** Layout-Engine mit Reset-Funktion zur Wiederherstellung des Standard-Grids (Master-Control & World-Monitor).
+- **Retina Fixes:** Synchronisation von Framebuffer-Skalierung und View-Bounds gegen UI-Einfrieren und Unschärfe.
+
+### 3. Metal Pipeline Optimierung
+- **Color-Attachment Fix:** Stabilisierung der Render-Pass-Deskriptoren durch explizite Index-Adressierung (`colorAttachments[0]`).
 
 ---
 
-## BACKLOG & ROADMAP
+## 🐛 Gelöste Fehler (Hotfixes)
+- **[BUG] ID-Conflict:** Fix für identische Asset-Namen via `ImGui::PushID(it->id)`.
+- **[BUG] Event-Occlusion:** Fix der Spalten-Logik; `DEL`-Buttons sind nun trotz Selektion klickbar.
+- **[BUG] Memory:** Korrektes Array-Handling für `snprintf` zur Vermeidung von Buffer-Overflows.
 
-### Modul: Visual-Advanced (v0.4.x)
-- [ ] **Market Session Zones:** Integration von LDN/NY/TYO Handelszeiten als semitransparente Glow-Bänder hinter der Weltkarte.
-- [ ] **Day/Night Terminator:** Implementierung der mathematischen Schattenlinie basierend auf dem aktuellen Sonnenstand.
-- [ ] **Chrono-X Needles:** Re-Integration der Asset-Charts mit zeitlich proportional skalierten X-Achsen.
+---
 
-### Modul: Infrastructure (v0.5.x)
-- [ ] **Persistence Layer:** SQLite-Integration für deterministische Datenspeicherung in `~/Library/Application Support/AXIOM`.
-- [ ] **Trade History CSV-Export:** Modul für den Datenexport zu Analysezwecken.
+## 📅 Roadmap (Vorschau v0.5.x)
+- [ ] **Infrastructure:** SQLite-Integration für deterministische Trade-Persistenz.
+- [ ] **Visuals:** Integration der `stb_image.h` zum Laden einer PNG-Weltkarte.
+- [ ] **Analytics:** Implementierung einer globalen PnL-Summen-Anzeige.
+
+---
+
+### **Repo-Status:** 
+`Checkpoint v0.4.0-alpha - Build Stable`
