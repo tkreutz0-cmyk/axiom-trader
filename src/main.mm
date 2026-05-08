@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <chrono>
 #include <map>
 #include <cmath>
-#include <algorithm>
-#include <chrono>
-#include <ctime>
 
 #define GLFW_INCLUDE_NONE
 #define GLFW_EXPOSE_NATIVE_COCOA
@@ -20,94 +18,62 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
 
-enum class TradeStatus { PLANNED = 0, REALIZED = 1 };
+// --- DATENSTRUKTUR ---
+enum TradeSide { LONG = 0, SHORT = 1 };
 struct AxiomTrade {
-    int id; std::string symbol; double entryPrice; double exitPrice;
+    int id; std::string symbol; TradeSide side; double entryPrice; double exitPrice;
     std::chrono::system_clock::time_point timestamp;
-    TradeStatus status;
+    double getPnL() const { return (side == LONG) ? (exitPrice - entryPrice) : (entryPrice - exitPrice); }
 };
 
-/* ==========================================================
-   GEOMETRY ENGINE: MATH & TRIANGULATION
-   ========================================================== */
-static float Cross(const ImVec2& a, const ImVec2& b, const ImVec2& c) {
-    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+// --- HILFSFUNKTIONEN ---
+ImU32 GetAssetColor(std::string s, float alpha = 1.0f) {
+    size_t hash = std::hash<std::string>{}(s);
+    float r = ((hash & 0xFF0000) >> 16) / 255.0f;
+    float g = ((hash & 0x00FF00) >> 8) / 255.0f;
+    float b = (hash & 0x0000FF) / 255.0f;
+    return ImGui::ColorConvertFloat4ToU32(ImVec4(r * 0.7f + 0.3f, g * 0.7f + 0.3f, b * 0.7f + 0.3f, alpha));
 }
 
-static bool PointInTri(const ImVec2& p, const ImVec2& a, const ImVec2& b, const ImVec2& c) {
-    float c1 = Cross(a, b, p); float c2 = Cross(b, c, p); float c3 = Cross(c, a, p);
-    return !(((c1 < 0) || (c2 < 0) || (c3 < 0)) && ((c1 > 0) || (c2 > 0) || (c3 > 0)));
-}
+struct GeoPos { float lon; float lat; };
+std::map<std::string, GeoPos> AssetLocations = {
+    {"BTC/USD", {-74.0, 40.7}}, {"EUR/USD", {8.6, 50.1}}, {"GBP/USD", {-0.1, 51.5}}, {"USD/JPY", {139.6, 35.6}}, {"AUD/USD", {151.2, -33.8}}
+};
 
-static void NormalizePoly(std::vector<ImVec2>& p) {
-    if (p.size() >= 2) {
-        if (fabsf(p.front().x - p.back().x) < 0.001f && fabsf(p.front().y - p.back().y) < 0.001f) p.pop_back();
-    }
-    if (p.size() < 3) return;
-    double area = 0.0;
-    for (int i = 0; i < (int)p.size(); ++i) area += (double)p[i].x * p[(i + 1) % p.size()].y - (double)p[(i + 1) % p.size()].x * p[i].y;
-    if (area < 0.0) std::reverse(p.begin(), p.end());
-}
-
-static void FillConcavePoly(ImDrawList* dl, const std::vector<ImVec2>& inPoly, ImU32 col) {
-    if (inPoly.size() < 3) return;
-    std::vector<ImVec2> poly = inPoly; NormalizePoly(poly);
-    std::vector<int> idx(poly.size());
-    for (int i = 0; i < (int)idx.size(); ++i) idx[i] = i;
-    int guard = 0;
-    while (idx.size() > 2 && guard++ < 1000) {
-        bool clipped = false;
-        for (int i = 0; i < (int)idx.size(); ++i) {
-            int i0 = idx[(i + (int)idx.size() - 1) % (int)idx.size()], i1 = idx[i], i2 = idx[(i + 1) % (int)idx.size()];
-            if (Cross(poly[i0], poly[i1], poly[i2]) <= 0.0f) continue;
-            bool anyIn = false;
-            for (int j = 0; j < (int)idx.size(); j++) {
-                if (idx[j] == i0 || idx[j] == i1 || idx[j] == i2) continue;
-                if (PointInTri(poly[idx[j]], poly[i0], poly[i1], poly[i2])) { anyIn = true; break; }
-            }
-            if (anyIn) continue;
-            dl->AddTriangleFilled(poly[i0], poly[i1], poly[i2], col);
-            idx.erase(idx.begin() + i); clipped = true; break;
-        }
-        if (!clipped) break;
-    }
-}
-
-/* ==========================================================
-   AXIOM WORLD ENGINE
-   ========================================================== */
-void RenderAxiomWorld(ImDrawList* dl, ImVec2 p, ImVec2 s, const std::vector<AxiomTrade>& trades, int sel_id) {
-    const float targetAspect = 2.0f;
+void RenderAxiomWorld(ImDrawList* dl, ImVec2 p, ImVec2 s, std::vector<AxiomTrade>& trades, int& sel_id, ImTextureID mapTex) {
+    const float aspect = 2.0f;
     ImVec2 mS = s;
-    if ((mS.x / mS.y) > targetAspect) mS.x = mS.y * targetAspect;
-    else mS.y = mS.x / targetAspect;
+    if ((mS.x / mS.y) > aspect) mS.x = mS.y * aspect; else mS.y = mS.x / aspect;
     ImVec2 mP = ImVec2(p.x + (s.x - mS.x) * 0.5f, p.y + (s.y - mS.y) * 0.5f);
     
     dl->AddRectFilled(mP, ImVec2(mP.x + mS.x, mP.y + mS.y), IM_COL32(10, 10, 15, 255), 4.0f);
+    if (mapTex != 0) dl->AddImage(mapTex, mP, ImVec2(mP.x + mS.x, mP.y + mS.y));
+    else dl->AddRect(mP, ImVec2(mP.x + mS.x, mP.y + mS.y), IM_COL32(30, 30, 45, 255), 4.0f);
+
     dl->PushClipRect(mP, ImVec2(mP.x + mS.x, mP.y + mS.y), true);
+    auto MapPos = [&](float lon, float lat) { return ImVec2(mP.x + (lon + 180.f) / 360.f * mS.x, mP.y + (90.f - lat) / 180.f * mS.y); };
 
-    auto Map = [&](float lon, float lat) {
-        return ImVec2(mP.x + (lon + 180.f) / 360.f * mS.x, mP.y + (90.f - lat) / 180.f * mS.y);
-    };
-
-    std::vector<std::vector<ImVec2>> world = {
-        {{-168,65},{-120,70},{-70,72},{-55,50},{-80,15},{-120,30},{-168,65}},
-        {{-80,12},{-50,10},{-40,-20},{-60,-55},{-82,-20},{-80,12}},
-        {{-10,35},{15,45},{30,65},{60,75},{120,70},{150,60},{140,10},{50,5},{-10,35}}
-    };
-
-    for (auto& poly : world) {
-        std::vector<ImVec2> sPts;
-        for (auto v : poly) sPts.push_back(Map(v.x, v.y));
-        FillConcavePoly(dl, sPts, IM_COL32(40, 45, 65, 255));
-        dl->AddPolyline(sPts.data(), (int)sPts.size(), IM_COL32(110, 130, 170, 255), ImDrawFlags_Closed, 1.2f);
-    }
+    ImVec2 mousePos = ImGui::GetMousePos();
+    bool mouseClicked = ImGui::IsMouseClicked(0);
 
     for(const auto& t : trades) {
-        time_t tt = std::chrono::system_clock::to_time_t(t.timestamp);
-        struct tm* tu = gmtime(&tt);
-        float lon = (tu->tm_hour / 24.0f) * 360.0f - 180.0f;
-        dl->AddCircleFilled(Map(lon, 0), 6, (t.id == sel_id) ? IM_COL32_WHITE : IM_COL32(0, 255, 255, 200));
+        GeoPos gPos = {0, 20}; if (AssetLocations.count(t.symbol)) gPos = AssetLocations[t.symbol];
+        ImVec2 screenPos = MapPos(gPos.lon, gPos.lat);
+        
+        float dist = sqrtf(powf(mousePos.x - screenPos.x, 2) + powf(mousePos.y - screenPos.y, 2));
+        if (mouseClicked && dist < 15.0f) sel_id = t.id;
+
+        bool is_sel = (t.id == sel_id);
+        ImU32 assetCol = GetAssetColor(t.symbol, is_sel ? 1.0f : 0.7f);
+        
+        if (t.side == LONG) dl->AddTriangleFilled(ImVec2(screenPos.x, screenPos.y - 6), ImVec2(screenPos.x - 5, screenPos.y + 3), ImVec2(screenPos.x + 5, screenPos.y + 3), assetCol);
+        else dl->AddTriangleFilled(ImVec2(screenPos.x, screenPos.y + 6), ImVec2(screenPos.x - 5, screenPos.y - 3), ImVec2(screenPos.x + 5, screenPos.y - 3), assetCol);
+        
+        if(is_sel) dl->AddCircle(screenPos, 12.0f, IM_COL32_WHITE, 16, 1.5f);
+        
+        char label[128];
+        snprintf(label, 128, "%s %s", (t.side == LONG ? "[L]" : "[S]"), t.symbol.c_str());
+        dl->AddText(ImVec2(screenPos.x + 12, screenPos.y - 8), is_sel ? IM_COL32_WHITE : assetCol, label);
     }
     dl->PopClipRect();
 }
@@ -116,40 +82,27 @@ int main(int, char**) {
     if (!glfwInit()) return 1;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
-    GLFWwindow* window = glfwCreateWindow(1440, 900, "AXIOM Trader v35.0", nullptr, nullptr);
-
+    GLFWwindow* window = glfwCreateWindow(1440, 900, "AXIOM Trader v43.0", nullptr, nullptr);
     id<MTLDevice> device = MTLCreateSystemDefaultDevice();
     id<MTLCommandQueue> commandQueue = [device newCommandQueue];
     IMGUI_CHECKVERSION(); ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOther(window, true); ImGui_ImplMetal_Init(device);
-
     NSWindow* nswin = glfwGetCocoaWindow(window);
-    NSView* view = nswin.contentView;
-    CAMetalLayer* layer = [CAMetalLayer layer];
-    layer.device = device; layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-    layer.contentsScale = nswin.backingScaleFactor;
-    layer.opaque = YES;
-
-    [view setLayer:layer];
-    [view setWantsLayer:YES]; // Korrekte Cocoa Reihenfolge
+    CAMetalLayer* layer = [CAMetalLayer layer]; layer.device = device; layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+    nswin.contentView.layer = layer; nswin.contentView.wantsLayer = YES;
 
     std::vector<AxiomTrade> my_trades;
-    static int next_id = 0, selected_id = -1;
-    static std::string focus_target = "";
+    int next_id = 0, selected_id = -1, last_selected = -1;
+    ImTextureID dummyTex = 0;
+    char asset_buf[64] = "BTC/USD";
+    double entry_val = 60000.0, exit_val = 61000.0; int side_idx = 0;
+    bool layout_init_needed = true;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
-        CGSize bSize = view.bounds.size;
-        CGFloat sc = layer.contentsScale;
-        if (bSize.width <= 1) continue;
-        layer.frame = view.bounds;
-        layer.drawableSize = CGSizeMake(bSize.width * sc, bSize.height * sc);
-
+        int w, h; glfwGetFramebufferSize(window, &w, &h); layer.drawableSize = CGSizeMake(w, h);
         @autoreleasepool {
-            id<CAMetalDrawable> drawable = [layer nextDrawable];
-            if (!drawable) continue;
-
-            // RenderPassDescriptor explizit konfigurieren
+            id<CAMetalDrawable> drawable = [layer nextDrawable]; if (!drawable) continue;
             MTLRenderPassDescriptor* rp = [MTLRenderPassDescriptor renderPassDescriptor];
             rp.colorAttachments[0].texture = drawable.texture;
             rp.colorAttachments[0].loadAction = MTLLoadActionClear;
@@ -158,51 +111,73 @@ int main(int, char**) {
 
             ImGui_ImplMetal_NewFrame(rp); ImGui_ImplGlfw_NewFrame(); ImGui::NewFrame();
 
-            // --- UI MASTER ---
-            ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+            // --- SYSTEM: LAYOUT MANAGER ---
+            ImGui::Begin("SYSTEM: Layout");
+            if (ImGui::Button("Reset to Standard Grid", ImVec2(-1, 30)) || layout_init_needed) {
+                ImGui::SetWindowPos("SYNAPSE Master-Control", ImVec2(20, 20));
+                ImGui::SetWindowSize("SYNAPSE Master-Control", ImVec2(350, 500));
+                ImGui::SetWindowPos("World Monitor", ImVec2(380, 20));
+                ImGui::SetWindowSize("World Monitor", ImVec2(1040, 600));
+                ImGui::SetWindowPos("SYSTEM: Layout", ImVec2(20, 530));
+                ImGui::SetWindowSize("SYSTEM: Layout", ImVec2(350, 100));
+                layout_init_needed = false;
+            }
+            ImGui::End();
+
+            // --- MASTER CONTROL ---
             ImGui::Begin("SYNAPSE Master-Control");
-            static char buf[64] = "BTC/USD"; static double e = 60000, ex = 61000;
-            ImGui::InputText("Asset", buf, 64); ImGui::InputDouble("In", &e); ImGui::InputDouble("Out", &ex);
-            
-            if (selected_id == -1) {
-                if (ImGui::Button("Add Trade", ImVec2(-1, 35)))
-                    my_trades.push_back({next_id++, std::string(buf), e, ex, std::chrono::system_clock::now(), TradeStatus::REALIZED});
-            } else {
-                if (ImGui::Button("Update Selected", ImVec2(180, 35))) {
-                    for(auto& t : my_trades) if(t.id == selected_id) { t.symbol = buf; t.entryPrice = e; t.exitPrice = ex; }
+            if (selected_id != -1 && selected_id != last_selected) {
+                for(auto& t : my_trades) if(t.id == selected_id) {
+                    strncpy(asset_buf, t.symbol.c_str(), 64);
+                    entry_val = t.entryPrice; exit_val = t.exitPrice; side_idx = (int)t.side;
+                    break;
                 }
-                ImGui::SameLine(); if (ImGui::Button("Cancel", ImVec2(-1, 35))) selected_id = -1;
+                last_selected = selected_id;
             }
 
-            if (ImGui::BeginTable("T", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-                ImGui::TableSetupColumn("Asset"); ImGui::TableSetupColumn("PnL"); ImGui::TableSetupColumn("Edit");
-                ImGui::TableHeadersRow();
-                for (auto& t : my_trades) {
-                    ImGui::TableNextRow(); ImGui::TableSetColumnIndex(0);
-                    if (ImGui::Selectable(t.symbol.c_str(), selected_id == t.id, ImGuiSelectableFlags_SpanAllColumns)) {
-                        selected_id = t.id; strncpy(buf, t.symbol.c_str(), 64); e = t.entryPrice; ex = t.exitPrice;
-                    }
-                    ImGui::TableSetColumnIndex(1); ImGui::Text("%.2f", t.exitPrice - t.entryPrice);
-                    ImGui::TableSetColumnIndex(2); if(ImGui::SmallButton(("EDIT##"+std::to_string(t.id)).c_str())) focus_target = t.symbol;
+            ImGui::InputText("Asset", asset_buf, 64);
+            const char* sides[] = { "LONG", "SHORT" }; ImGui::Combo("Side", &side_idx, sides, 2);
+            ImGui::InputDouble("In", &entry_val); ImGui::InputDouble("Out", &exit_val);
+            
+            if (selected_id == -1) {
+                if (ImGui::Button("Add Trade", ImVec2(-1, 30)))
+                    my_trades.push_back({next_id++, std::string(asset_buf), (TradeSide)side_idx, entry_val, exit_val, std::chrono::system_clock::now()});
+            } else {
+                if (ImGui::Button("Update", ImVec2(100, 30))) {
+                    for(auto& t : my_trades) if(t.id == selected_id) { t.symbol = asset_buf; t.entryPrice = entry_val; t.exitPrice = exit_val; t.side = (TradeSide)side_idx; }
+                }
+                ImGui::SameLine(); if (ImGui::Button("Deselect", ImVec2(-1, 30))) { selected_id = -1; last_selected = -1; }
+            }
+
+            ImGui::Separator();
+            if (ImGui::BeginTable("Trades", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                ImGui::TableSetupColumn("Asset"); ImGui::TableSetupColumn("PnL"); ImGui::TableSetupColumn("Action"); ImGui::TableHeadersRow();
+                for (auto it = my_trades.begin(); it != my_trades.end(); ) {
+                    ImGui::PushID(it->id); ImGui::TableNextRow(); ImGui::TableSetColumnIndex(0);
+                    char t_label[128]; snprintf(t_label, 128, "%s %s", (it->side == LONG ? "▲" : "▼"), it->symbol.c_str());
+                    if (ImGui::Selectable(t_label, selected_id == it->id)) selected_id = it->id;
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::TextColored(it->getPnL() >= 0 ? ImVec4(0.4,1,0,1) : ImVec4(1,0.4,0,1), "%.2f", it->getPnL());
+                    ImGui::TableSetColumnIndex(2);
+                    if (ImGui::SmallButton("DEL")) { if (selected_id == it->id) selected_id = -1; it = my_trades.erase(it); } else { ++it; }
+                    ImGui::PopID();
                 }
                 ImGui::EndTable();
             }
             ImGui::End();
 
-            // --- UI WORLD ---
-            ImGui::SetNextWindowPos(ImVec2(20, 440), ImGuiCond_FirstUseEver);
+            // --- WORLD MONITOR ---
             ImGui::Begin("World Monitor");
-            RenderAxiomWorld(ImGui::GetWindowDrawList(), ImGui::GetCursorScreenPos(), ImGui::GetContentRegionAvail(), my_trades, selected_id);
+            RenderAxiomWorld(ImGui::GetWindowDrawList(), ImGui::GetCursorScreenPos(), ImGui::GetContentRegionAvail(), my_trades, selected_id, dummyTex);
             ImGui::End();
 
-            ImGui::Render();
             id<MTLCommandBuffer> cb = [commandQueue commandBuffer];
-            // FIX: Explizite Adressierung des Encoders zur Behebung des Selector-Fehlers
             id<MTLRenderCommandEncoder> ce = [cb renderCommandEncoderWithDescriptor:rp];
-            ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cb, ce);
+            ImGui::Render(); ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cb, ce);
             [ce endEncoding]; [cb presentDrawable:drawable]; [cb commit];
         }
     }
     return 0;
 }
+
 
