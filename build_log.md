@@ -101,3 +101,49 @@
 
 **Nächster geplanter Schritt:**  
 Trennung in zwei Targets (`AxiomCoreTest` ↔ `AxiomTrader.app`) und Wiederanbindung des ImGui/Metal‑Event‑Loops.
+
+---
+
+## ✅ Erreichte Meilensteine (Sprint v0.4.2 — Build Recovery & Entry-Point Stabilisierung)
+
+### 10. Wiederherstellung des GUI-Einstiegspunkts (kritisch)
+- **Explizite Re-Definition des Application Entry-Points:**
+  - Einführung einer neuen, eindeutigen GUI-`main()` unter `src/ui/main_gui.mm`.
+  - Entfernung aller konkurrierenden oder veralteten `main`-Implementierungen.
+- **Target-Disziplin:** Sicherstellung, dass pro Build-Target exakt **eine** `main()` existiert
+  - Vermeidung von Linker-Konflikten (`duplicate symbol _main`).
+
+### 11. CMake-Pfad- und Target-Sanierung (neu)
+- **Pfadrealität vor Xcode-Gruppen:** Anpassung der CMake-Konfiguration an die tatsächliche Projektstruktur
+  - Korrektur von `src/main_gui.mm` → `src/ui/main_gui.mm`.
+- **Deterministisches Target-Setup:**
+  - Reduktion auf ein kanonisches GUI-Target (`AxiomTrader`) während der Recovery-Phase.
+  - Temporärer Verzicht auf parallele Test-Targets zur Stabilisierung des Build-Systems.
+- **Cache-Reset erzwingen:** Vollständiges Neu-Generieren des Xcode-Projekts nach strukturellen Änderungen
+  - `rm -rf build && cmake -S . -B build -G Xcode`.
+
+### 12. Xcode-Scheme-Rekonstruktion (neu)
+- **Scheme-Verlust erkannt & behoben:**
+  - Nach CMake-Neugenerierung fehlte ein aktives Run-Scheme.
+  - Manuelle (bzw. automatische) Wiederherstellung des Schemes für `AxiomTrader`.
+- **Run-Konfiguration validiert:**
+  - Korrekte Auswahl des App-Targets als aktives Scheme.
+  - Wiederherstellung des ▶︎-Run-Buttons in Xcode.
+
+### 13. Minimaler Cocoa-App-Lifecycle (neu)
+- **Cocoa-Bootstrap validiert:**
+  - Start einer minimalen, fensterlosen Cocoa-App zur Verifikation des App-Lifecycles.
+  - Sichtbare Aktivierung der App über Menüleiste / Dock (auch ohne sofortiges Fenster).
+- **Ergebnis:**
+  - App startet zuverlässig.
+  - Event-Loop läuft stabil.
+
+---
+
+## 🧯 Behobene Build- & IDE-Probleme (Recovery-Fixes)
+
+- **[BUILD] Missing Entry Point:** CMake-Fehler bei fehlender `main()` vollständig behoben.
+- **[LINKER] Duplicate `_main`:** Eliminierung konkurrierender Einstiegspunkte.
+- **[CMAKE] Falscher Source-Pfad:** Korrektur inkonsistenter Pfadangaben nach Struktur-Refactor.
+- **[XCODE] Kein Run-Scheme:** Wiederherstellung der Startbarkeit durch korrektes Scheme-Management.
+
