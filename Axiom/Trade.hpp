@@ -32,10 +32,13 @@ namespace Axiom {
         } meta;
 
         // Wird beim Laden/Ändern des Symbols gerufen
-        void refreshMetadata();
+        
+        void setSymbol(std::string_view s);
+        void refreshMetadata() noexcept;
 
-        // Optional: setter, die automatisch meta refreshen
-        void setSymbol(std::string s);
+        
+        
+        
 
     private:
         static bool looksLikeFx(std::string_view s) noexcept;

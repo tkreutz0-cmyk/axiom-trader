@@ -17,6 +17,10 @@ set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
 # 4. Definition der Quellcode-Dateien
 set(PROJECT_SOURCES
     src/main.mm
+
+    # ✅ Axiom Core
+    Axiom/Trade.cpp
+
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
@@ -29,9 +33,9 @@ set(PROJECT_SOURCES
 add_executable(AxiomTrader MACOSX_BUNDLE ${PROJECT_SOURCES})
 
 # 6. Include-Verzeichnisse (Wo liegen die Header?)
-target_include_directories(AxiomTrader PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${IMGUI_DIR} 
+target_include_directories(AxiomTrader PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}          # <= DAS IST DER FIX
+    ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
     /opt/homebrew/include
 )

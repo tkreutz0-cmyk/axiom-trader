@@ -3,13 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
 		76E250015D5BF9C0B16EC8B7 /* ZERO_CHECK */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = 7ADA502D9B4143D18C457AE0 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
+			buildConfigurationList = 921427C3B84749C484385DC8 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
 			buildPhases = (
 				C5BC98E8CAF3A7E2D3FB192C /* Generate CMakeFiles/ZERO_CHECK */,
 			);
@@ -20,13 +20,13 @@
 		};
 		7CE1D7DAEAA646369689C7A2 /* ALL_BUILD */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = 964BD3FD657E47E0A6C7698A /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+			buildConfigurationList = D6E3AAB8CAD448C59F76FD82 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
 			buildPhases = (
 				370A78A73688FD410A780D37 /* Generate CMakeFiles/ALL_BUILD */,
 			);
 			dependencies = (
-				4DA130C692C2499298BEAE2A /* PBXTargetDependency */,
-				9B8FEA4DADE743618378470B /* PBXTargetDependency */,
+				0F81BC1AC8E24F3393819600 /* PBXTargetDependency */,
+				DC5F91E0CCBA4520818FA34D /* PBXTargetDependency */,
 			);
 			name = ALL_BUILD;
 			productName = ALL_BUILD;
@@ -34,31 +34,65 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		5214062F6FCF4D09B6A68F90 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 35A2A2AA3F634744A438B8BF /* main.mm */; };
-		775E76C19C3F4F36963D448B /* imgui_tables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45B5509716E94BFD88B35843 /* imgui_tables.cpp */; };
-		B1B236312EEB42939D887085 /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 41FBA34026FD481AB93F567D /* imgui_draw.cpp */; };
-		B1DCBE2308364FF78ED88D89 /* imgui_impl_metal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 36DAF7C404404253BC358079 /* imgui_impl_metal.mm */; };
-		E2F7B3E2C76349EF868A5BF6 /* imgui_impl_glfw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FCC5D75779AE4DC7BACAD66E /* imgui_impl_glfw.cpp */; };
-		FB90450862B34273B5A2F2E3 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 356C8D128656485DB30420ED /* imgui_widgets.cpp */; };
-		FBD44270FB0A4AAAB064E0A2 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C7595B9A262F4B7D8FCA240A /* imgui.cpp */; };
+		01EF52A6040E42468294BC12 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_widgets.cpp */ = {isa = PBXBuildFile; fileRef = 62BA189698B44A0786B229EA /* /Users/tkreutz/axiom-trader/external/imgui/imgui_widgets.cpp */; };
+		15210841743445E387E82C21 /* /Users/tkreutz/axiom-trader/Axiom/Trade.cpp */ = {isa = PBXBuildFile; fileRef = 16B22B50764E4DE383779393 /* /Users/tkreutz/axiom-trader/Axiom/Trade.cpp */; };
+		1EB20EFDF8F7415BAF99C42E /* /Users/tkreutz/axiom-trader/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 8B831CFF81CE4184A914B905 /* /Users/tkreutz/axiom-trader/CMakeLists.txt */; };
+		3D0D138B5AC74C2F8B41891B /* /Users/tkreutz/axiom-trader/src/main.mm */ = {isa = PBXBuildFile; fileRef = 9C03A1727C994595A108BB3A /* /Users/tkreutz/axiom-trader/src/main.mm */; };
+		4D1CAD278141490DBA0AA5D8 /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_metal.mm */ = {isa = PBXBuildFile; fileRef = 314C4B6D65D343D5930A10FC /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_metal.mm */; };
+		7FDC78F1C27E4234B96DC141 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_tables.cpp */ = {isa = PBXBuildFile; fileRef = 4EF2E5BD6CC84325B915B8E4 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_tables.cpp */; };
+		A2BCD9AEF73A4E10B92C5042 /* /Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist */ = {isa = PBXBuildFile; fileRef = AE2B4250099E4F758409F3FC /* /Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist */; };
+		ACE409D0E11A4E88A806C400 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_draw.cpp */ = {isa = PBXBuildFile; fileRef = 6F2548465C0D4E7D9E2FDFC4 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_draw.cpp */; };
+		C10D874831D64E5094C25E89 /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_glfw.cpp */ = {isa = PBXBuildFile; fileRef = CBF75CB5F7A24646BFB43384 /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_glfw.cpp */; };
+		DD9B40AC7F7C4F4BA362EDDC /* /Users/tkreutz/axiom-trader/external/imgui/imgui.cpp */ = {isa = PBXBuildFile; fileRef = 75F9B89F0CE64F8A86D439B6 /* /Users/tkreutz/axiom-trader/external/imgui/imgui.cpp */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXBuildStyle section */
+		0F4929E108454D148C3BEB74 /* RelWithDebInfo */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = RelWithDebInfo;
+		};
+		2B1A4938858247668200CAF4 /* Debug */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Debug;
+		};
+		51F365A27A3B47EBBD01B0E8 /* MinSizeRel */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = MinSizeRel;
+		};
+		C7B99B9240954F62A6A3B235 /* Release */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Release;
+		};
+/* End PBXBuildStyle section */
+
 /* Begin PBXContainerItemProxy section */
-		51903F96032D43D7B023B97C /* PBXContainerItemProxy */ = {
+		102FB78B7D4D43B5A09BC827 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E0A3B3A9024F4CD9B46DD88C /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 76E250015D5BF9C0B16EC8B7;
 			remoteInfo = ZERO_CHECK;
 		};
-		67C9C1F08A22442DB79DD6A2 /* PBXContainerItemProxy */ = {
+		2744E91720E64DDC806F6D86 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E0A3B3A9024F4CD9B46DD88C /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = ACB7D5A7211C506D0A531579;
 			remoteInfo = AxiomTrader;
 		};
-		A39F114DAF024224B5D53509 /* PBXContainerItemProxy */ = {
+		C5C3FD901A1E4789A8484702 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E0A3B3A9024F4CD9B46DD88C /* Project object */;
 			proxyType = 1;
@@ -68,21 +102,22 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		3386428580E148EFBBDCD350 /* Info.plist */ = {isa = PBXFileReference; explicitFileType = sourcecode.text.plist; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = build/CMakeFiles/AxiomTrader.dir/Info.plist; sourceTree = SOURCE_ROOT; };
-		356C8D128656485DB30420ED /* imgui_widgets.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_widgets.cpp; path = external/imgui/imgui_widgets.cpp; sourceTree = SOURCE_ROOT; };
-		35A2A2AA3F634744A438B8BF /* main.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = main.mm; path = src/main.mm; sourceTree = SOURCE_ROOT; };
-		36DAF7C404404253BC358079 /* imgui_impl_metal.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = imgui_impl_metal.mm; path = external/imgui/backends/imgui_impl_metal.mm; sourceTree = SOURCE_ROOT; };
-		41FBA34026FD481AB93F567D /* imgui_draw.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_draw.cpp; path = external/imgui/imgui_draw.cpp; sourceTree = SOURCE_ROOT; };
-		440F35867D254643B1302230 /* AxiomTrader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = AxiomTrader.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		45B5509716E94BFD88B35843 /* imgui_tables.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_tables.cpp; path = external/imgui/imgui_tables.cpp; sourceTree = SOURCE_ROOT; };
-		77554083388E4A4A9E68FB24 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
-		C7595B9A262F4B7D8FCA240A /* imgui.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui.cpp; path = external/imgui/imgui.cpp; sourceTree = SOURCE_ROOT; };
-		ED29188970164441AEC9A629 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
-		FCC5D75779AE4DC7BACAD66E /* imgui_impl_glfw.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_impl_glfw.cpp; path = external/imgui/backends/imgui_impl_glfw.cpp; sourceTree = SOURCE_ROOT; };
+		07A347C0B7204FD398DD2B09 /* AxiomTrader */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = AxiomTrader; sourceTree = BUILT_PRODUCTS_DIR; };
+		16B22B50764E4DE383779393 /* /Users/tkreutz/axiom-trader/Axiom/Trade.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Trade.cpp; path = Axiom/Trade.cpp; sourceTree = SOURCE_ROOT; };
+		314C4B6D65D343D5930A10FC /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_metal.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = imgui_impl_metal.mm; path = external/imgui/backends/imgui_impl_metal.mm; sourceTree = SOURCE_ROOT; };
+		4EF2E5BD6CC84325B915B8E4 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_tables.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_tables.cpp; path = external/imgui/imgui_tables.cpp; sourceTree = SOURCE_ROOT; };
+		62BA189698B44A0786B229EA /* /Users/tkreutz/axiom-trader/external/imgui/imgui_widgets.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_widgets.cpp; path = external/imgui/imgui_widgets.cpp; sourceTree = SOURCE_ROOT; };
+		6F2548465C0D4E7D9E2FDFC4 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_draw.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_draw.cpp; path = external/imgui/imgui_draw.cpp; sourceTree = SOURCE_ROOT; };
+		75F9B89F0CE64F8A86D439B6 /* /Users/tkreutz/axiom-trader/external/imgui/imgui.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui.cpp; path = external/imgui/imgui.cpp; sourceTree = SOURCE_ROOT; };
+		8B831CFF81CE4184A914B905 /* /Users/tkreutz/axiom-trader/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		9C03A1727C994595A108BB3A /* /Users/tkreutz/axiom-trader/src/main.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = main.mm; path = src/main.mm; sourceTree = SOURCE_ROOT; };
+		AE2B4250099E4F758409F3FC /* /Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist */ = {isa = PBXFileReference; explicitFileType = sourcecode.text.plist; fileEncoding = 4; name = Info.plist; path = build/CMakeFiles/AxiomTrader.dir/Info.plist; sourceTree = SOURCE_ROOT; };
+		CBF75CB5F7A24646BFB43384 /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_glfw.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = imgui_impl_glfw.cpp; path = external/imgui/backends/imgui_impl_glfw.cpp; sourceTree = SOURCE_ROOT; };
+		EACB0B00E7EB42C885ED9AE5 /* /Users/tkreutz/axiom-trader/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		B24F28D5ABF44E3F8CD519D1 /* Frameworks */ = {
+		E13E7459F5DC43638B39BA7E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -92,85 +127,86 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		12C2E81C8AFB41988CB6CDEB /* CMake Rules */ = {
+		031F0CAB861E4A388A68F3A1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AE2B4250099E4F758409F3FC /* /Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		06F9F63BF59B4DF3941D1B95 = {
+			isa = PBXGroup;
+			children = (
+				E249E602568F436589A5F777 /* ALL_BUILD */,
+				09C4A47F69A042BFBD15F435 /* AxiomTrader */,
+				6BE9F361AED94E68B37A3D6E /* Products */,
+				602D8D56C9FE443386FE890C /* Frameworks */,
+				30F4BA89DBAC4EB6B358A068 /* Resources */,
+			);
+			sourceTree = "<group>";
+		};
+		09C4A47F69A042BFBD15F435 /* AxiomTrader */ = {
+			isa = PBXGroup;
+			children = (
+				031F0CAB861E4A388A68F3A1 /* Resources */,
+				4F72DB22A1374B6191E630E2 /* Source Files */,
+				8B831CFF81CE4184A914B905 /* /Users/tkreutz/axiom-trader/CMakeLists.txt */,
+			);
+			name = AxiomTrader;
+			sourceTree = "<group>";
+		};
+		30F4BA89DBAC4EB6B358A068 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
-			name = "CMake Rules";
+			name = Resources;
 			sourceTree = "<group>";
 		};
-		1330273DBD7A448B82353C5C /* Frameworks */ = {
+		4F72DB22A1374B6191E630E2 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				16B22B50764E4DE383779393 /* /Users/tkreutz/axiom-trader/Axiom/Trade.cpp */,
+				CBF75CB5F7A24646BFB43384 /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_glfw.cpp */,
+				314C4B6D65D343D5930A10FC /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_metal.mm */,
+				75F9B89F0CE64F8A86D439B6 /* /Users/tkreutz/axiom-trader/external/imgui/imgui.cpp */,
+				6F2548465C0D4E7D9E2FDFC4 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_draw.cpp */,
+				4EF2E5BD6CC84325B915B8E4 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_tables.cpp */,
+				62BA189698B44A0786B229EA /* /Users/tkreutz/axiom-trader/external/imgui/imgui_widgets.cpp */,
+				9C03A1727C994595A108BB3A /* /Users/tkreutz/axiom-trader/src/main.mm */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		602D8D56C9FE443386FE890C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		1BF2DF399CC04835BC98F6C9 /* Source Files */ = {
+		6BE9F361AED94E68B37A3D6E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FCC5D75779AE4DC7BACAD66E /* imgui_impl_glfw.cpp */,
-				36DAF7C404404253BC358079 /* imgui_impl_metal.mm */,
-				C7595B9A262F4B7D8FCA240A /* imgui.cpp */,
-				41FBA34026FD481AB93F567D /* imgui_draw.cpp */,
-				45B5509716E94BFD88B35843 /* imgui_tables.cpp */,
-				356C8D128656485DB30420ED /* imgui_widgets.cpp */,
-				35A2A2AA3F634744A438B8BF /* main.mm */,
-			);
-			name = "Source Files";
-			sourceTree = "<group>";
-		};
-		9509E0D6BAE646008EB9338B /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				3386428580E148EFBBDCD350 /* Info.plist */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-		};
-		B391E95C06A14DC4B95F9641 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				440F35867D254643B1302230 /* AxiomTrader.app */,
+				07A347C0B7204FD398DD2B09 /* AxiomTrader */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		BC6BB367EDA543909BA75685 /* ALL_BUILD */ = {
+		A6B14316F0F9459997CF4D1D /* CMake Rules */ = {
 			isa = PBXGroup;
 			children = (
-				12C2E81C8AFB41988CB6CDEB /* CMake Rules */,
-				ED29188970164441AEC9A629 /* CMakeLists.txt */,
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		E249E602568F436589A5F777 /* ALL_BUILD */ = {
+			isa = PBXGroup;
+			children = (
+				A6B14316F0F9459997CF4D1D /* CMake Rules */,
+				EACB0B00E7EB42C885ED9AE5 /* /Users/tkreutz/axiom-trader/CMakeLists.txt */,
 			);
 			name = ALL_BUILD;
-			sourceTree = "<group>";
-		};
-		BCB36B5A72A94EFF98212D92 = {
-			isa = PBXGroup;
-			children = (
-				BC6BB367EDA543909BA75685 /* ALL_BUILD */,
-				E20EE37F1E2B4F83AE03B809 /* AxiomTrader */,
-				B391E95C06A14DC4B95F9641 /* Products */,
-				1330273DBD7A448B82353C5C /* Frameworks */,
-				FFB18F0D5DA94A33A24FB69C /* Resources */,
-			);
-			sourceTree = "<group>";
-		};
-		E20EE37F1E2B4F83AE03B809 /* AxiomTrader */ = {
-			isa = PBXGroup;
-			children = (
-				9509E0D6BAE646008EB9338B /* Resources */,
-				1BF2DF399CC04835BC98F6C9 /* Source Files */,
-				77554083388E4A4A9E68FB24 /* CMakeLists.txt */,
-			);
-			name = AxiomTrader;
-			sourceTree = "<group>";
-		};
-		FFB18F0D5DA94A33A24FB69C /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -178,19 +214,19 @@
 /* Begin PBXNativeTarget section */
 		ACB7D5A7211C506D0A531579 /* AxiomTrader */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 56B8C30D2EE34C4EB7D460D1 /* Build configuration list for PBXNativeTarget "AxiomTrader" */;
+			buildConfigurationList = B18335B8007F41E88EAEABD8 /* Build configuration list for PBXNativeTarget "AxiomTrader" */;
 			buildPhases = (
-				AD8B2A905DD54BD7989B0569 /* Sources */,
-				B24F28D5ABF44E3F8CD519D1 /* Frameworks */,
+				DA1311B72A2B485EB0EBBB21 /* Sources */,
+				E13E7459F5DC43638B39BA7E /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				06E2FD1A981F4578B973C50E /* PBXTargetDependency */,
+				46C7A6F7A4D84678AF2F7DEB /* PBXTargetDependency */,
 			);
 			name = AxiomTrader;
 			productName = AxiomTrader;
-			productReference = 440F35867D254643B1302230 /* AxiomTrader.app */;
+			productReference = 07A347C0B7204FD398DD2B09 /* AxiomTrader */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -199,17 +235,21 @@
 		E0A3B3A9024F4CD9B46DD88C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 2640;
 			};
-			buildConfigurationList = 6CB909CAF40D48D7BB714A29 /* Build configuration list for PBXProject "AxiomTrader" */;
-			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = en;
-			hasScannedForEncodings = 0;
-			knownRegions = (
-				en,
-				Base,
+			buildConfigurationList = 215FB689D0D5405AB7A3E05F /* Build configuration list for PBXProject "AxiomTrader" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				2B1A4938858247668200CAF4 /* Debug */,
+				C7B99B9240954F62A6A3B235 /* Release */,
+				51F365A27A3B47EBBD01B0E8 /* MinSizeRel */,
+				0F4929E108454D148C3BEB74 /* RelWithDebInfo */,
 			);
-			mainGroup = BCB36B5A72A94EFF98212D92;
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 0;
+			mainGroup = 06F9F63BF59B4DF3941D1B95;
 			projectDirPath = "/Users/tkreutz/axiom-trader";
 			projectRoot = "";
 			targets = (
@@ -231,11 +271,57 @@
 			);
 			name = "Generate CMakeFiles/ALL_BUILD";
 			outputPaths = (
-				"/Users/tkreutz/axiom-trader/build/CMakeFiles/ALL_BUILD",
+"/Users/tkreutz/axiom-trader/build/CMakeFiles/ALL_BUILD"			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/tkreutz/axiom-trader/build
+  echo Build\\ all\\ projects
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/tkreutz/axiom-trader/build
+  echo Build\\ all\\ projects
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/tkreutz/axiom-trader/build
+  echo Build\\ all\\ projects
+fi
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/tkreutz/axiom-trader/build
+  echo Build\\ all\\ projects
+fi
+";
+			showEnvVarsInLog = 0;
+		};
+		3C0110FC8322DE7E50886E21 = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\nif test \"$CONFIGURATION\" = \"Debug\"; then :\n  cd /Users/tkreutz/axiom-trader/build\n  echo Build\\ all\\ projects\nfi\nif test \"$CONFIGURATION\" = \"Release\"; then :\n  cd /Users/tkreutz/axiom-trader/build\n  echo Build\\ all\\ projects\nfi\nif test \"$CONFIGURATION\" = \"MinSizeRel\"; then :\n  cd /Users/tkreutz/axiom-trader/build\n  echo Build\\ all\\ projects\nfi\nif test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :\n  cd /Users/tkreutz/axiom-trader/build\n  echo Build\\ all\\ projects\nfi\n";
+			shellScript = "# shell script goes here
+exit 0";
+			showEnvVarsInLog = 0;
+		};
+		9B50530E35CC49C82C2FACCF = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here
+exit 0";
 			showEnvVarsInLog = 0;
 		};
 		C5BC98E8CAF3A7E2D3FB192C /* Generate CMakeFiles/ZERO_CHECK */ = {
@@ -248,283 +334,69 @@
 			);
 			name = "Generate CMakeFiles/ZERO_CHECK";
 			outputPaths = (
-				"/Users/tkreutz/axiom-trader/build/CMakeFiles/ZERO_CHECK",
-			);
+"/Users/tkreutz/axiom-trader/build/CMakeFiles/ZERO_CHECK"			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\nif test \"$CONFIGURATION\" = \"Debug\"; then :\n  cd /Users/tkreutz/axiom-trader/build\n  make -f /Users/tkreutz/axiom-trader/build/CMakeScripts/ReRunCMake.make\nfi\nif test \"$CONFIGURATION\" = \"Release\"; then :\n  cd /Users/tkreutz/axiom-trader/build\n  make -f /Users/tkreutz/axiom-trader/build/CMakeScripts/ReRunCMake.make\nfi\nif test \"$CONFIGURATION\" = \"MinSizeRel\"; then :\n  cd /Users/tkreutz/axiom-trader/build\n  make -f /Users/tkreutz/axiom-trader/build/CMakeScripts/ReRunCMake.make\nfi\nif test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :\n  cd /Users/tkreutz/axiom-trader/build\n  make -f /Users/tkreutz/axiom-trader/build/CMakeScripts/ReRunCMake.make\nfi\n";
+			shellScript = "set -e
+if test \"$CONFIGURATION\" = \"Debug\"; then :
+  cd /Users/tkreutz/axiom-trader/build
+  make -f /Users/tkreutz/axiom-trader/build/CMakeScripts/ReRunCMake.make
+fi
+if test \"$CONFIGURATION\" = \"Release\"; then :
+  cd /Users/tkreutz/axiom-trader/build
+  make -f /Users/tkreutz/axiom-trader/build/CMakeScripts/ReRunCMake.make
+fi
+if test \"$CONFIGURATION\" = \"MinSizeRel\"; then :
+  cd /Users/tkreutz/axiom-trader/build
+  make -f /Users/tkreutz/axiom-trader/build/CMakeScripts/ReRunCMake.make
+fi
+if test \"$CONFIGURATION\" = \"RelWithDebInfo\"; then :
+  cd /Users/tkreutz/axiom-trader/build
+  make -f /Users/tkreutz/axiom-trader/build/CMakeScripts/ReRunCMake.make
+fi
+";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		AD8B2A905DD54BD7989B0569 /* Sources */ = {
+		DA1311B72A2B485EB0EBBB21 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E2F7B3E2C76349EF868A5BF6 /* imgui_impl_glfw.cpp in Sources */,
-				B1DCBE2308364FF78ED88D89 /* imgui_impl_metal.mm in Sources */,
-				FBD44270FB0A4AAAB064E0A2 /* imgui.cpp in Sources */,
-				B1B236312EEB42939D887085 /* imgui_draw.cpp in Sources */,
-				775E76C19C3F4F36963D448B /* imgui_tables.cpp in Sources */,
-				FB90450862B34273B5A2F2E3 /* imgui_widgets.cpp in Sources */,
-				5214062F6FCF4D09B6A68F90 /* main.mm in Sources */,
+				15210841743445E387E82C21 /* /Users/tkreutz/axiom-trader/Axiom/Trade.cpp */,
+				C10D874831D64E5094C25E89 /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_glfw.cpp */,
+				4D1CAD278141490DBA0AA5D8 /* /Users/tkreutz/axiom-trader/external/imgui/backends/imgui_impl_metal.mm */,
+				DD9B40AC7F7C4F4BA362EDDC /* /Users/tkreutz/axiom-trader/external/imgui/imgui.cpp */,
+				ACE409D0E11A4E88A806C400 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_draw.cpp */,
+				7FDC78F1C27E4234B96DC141 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_tables.cpp */,
+				01EF52A6040E42468294BC12 /* /Users/tkreutz/axiom-trader/external/imgui/imgui_widgets.cpp */,
+				3D0D138B5AC74C2F8B41891B /* /Users/tkreutz/axiom-trader/src/main.mm */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		06E2FD1A981F4578B973C50E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 76E250015D5BF9C0B16EC8B7 /* ZERO_CHECK */;
-			targetProxy = 51903F96032D43D7B023B97C /* PBXContainerItemProxy */;
-		};
-		4DA130C692C2499298BEAE2A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 76E250015D5BF9C0B16EC8B7 /* ZERO_CHECK */;
-			targetProxy = A39F114DAF024224B5D53509 /* PBXContainerItemProxy */;
-		};
-		9B8FEA4DADE743618378470B /* PBXTargetDependency */ = {
+		0F81BC1AC8E24F3393819600 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = ACB7D5A7211C506D0A531579 /* AxiomTrader */;
-			targetProxy = 67C9C1F08A22442DB79DD6A2 /* PBXContainerItemProxy */;
+			targetProxy = 2744E91720E64DDC806F6D86 /* PBXContainerItemProxy */;
+		};
+		46C7A6F7A4D84678AF2F7DEB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 76E250015D5BF9C0B16EC8B7 /* ZERO_CHECK */;
+			targetProxy = 102FB78B7D4D43B5A09BC827 /* PBXContainerItemProxy */;
+		};
+		DC5F91E0CCBA4520818FA34D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 76E250015D5BF9C0B16EC8B7 /* ZERO_CHECK */;
+			targetProxy = C5C3FD901A1E4789A8484702 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		04B018E1E8CF4F4190977361 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = " $(inherited)";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = MinSizeRel;
-		};
-		08C90122F72149D8A0A417CF /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = " $(inherited)";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = Debug;
-		};
-		1E91F2EB2A8B4913AFC53C82 /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = arm64;
-				SDKROOT = "";
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SYMROOT = "/Users/tkreutz/axiom-trader/build/build";
-			};
-			name = RelWithDebInfo;
-		};
-		49BB4ACB0EB846D2A49C4D84 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = arm64;
-				SDKROOT = "";
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SYMROOT = "/Users/tkreutz/axiom-trader/build/build";
-			};
-			name = MinSizeRel;
-		};
-		8349671076C1463F93165FCE /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = " $(inherited)";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = MinSizeRel;
-		};
-		86F2D1E5AC5049C8AD7E3B68 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/tkreutz/axiom-trader/build/Release";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = DE6D96335Q;
-				EXECUTABLE_PREFIX = "";
-				EXECUTABLE_SUFFIX = "";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"/Users/tkreutz/axiom-trader/include",
-					"/Users/tkreutz/axiom-trader/external/imgui",
-					"/Users/tkreutz/axiom-trader/external/imgui/backends",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "/Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist";
-				INSTALL_PATH = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					/opt/homebrew/lib,
-					"$(inherited)",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = (
-					"-DNDEBUG",
-					"'-std=gnu++20'",
-				);
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					/opt/homebrew/lib/libglfw.3.4.dylib,
-					"-framework",
-					Cocoa,
-					"-framework",
-					Metal,
-					"-framework",
-					MetalKit,
-					"-framework",
-					QuartzCore,
-					"-lobjc",
-					"$(inherited)",
-				);
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = AxiomTrader;
-				SECTORDER_FLAGS = "";
-				SYSTEM_HEADER_SEARCH_PATHS = (
-					/opt/homebrew/include,
-					"$(inherited)",
-				);
-				TARGET_TEMP_DIR = "/Users/tkreutz/axiom-trader/build/build/AxiomTrader.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = Release;
-		};
-		9451088848BC4FA4B2DCFF1D /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = arm64;
-				SDKROOT = "";
-				SYMROOT = "/Users/tkreutz/axiom-trader/build/build";
-			};
-			name = Debug;
-		};
-		957B8A18B9C0417DA4DE7F3B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/tkreutz/axiom-trader/build/Debug";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = DE6D96335Q;
-				EXECUTABLE_PREFIX = "";
-				EXECUTABLE_SUFFIX = "";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"/Users/tkreutz/axiom-trader/include",
-					"/Users/tkreutz/axiom-trader/external/imgui",
-					"/Users/tkreutz/axiom-trader/external/imgui/backends",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "/Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist";
-				INSTALL_PATH = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					/opt/homebrew/lib,
-					"$(inherited)",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = "   '-std=gnu++20' ";
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					/opt/homebrew/lib/libglfw.3.4.dylib,
-					"-framework",
-					Cocoa,
-					"-framework",
-					Metal,
-					"-framework",
-					MetalKit,
-					"-framework",
-					QuartzCore,
-					"-lobjc",
-					"$(inherited)",
-				);
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = AxiomTrader;
-				SECTORDER_FLAGS = "";
-				SYSTEM_HEADER_SEARCH_PATHS = (
-					/opt/homebrew/include,
-					"$(inherited)",
-				);
-				TARGET_TEMP_DIR = "/Users/tkreutz/axiom-trader/build/build/AxiomTrader.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = Debug;
-		};
-		97C1B1D24DC2414FA9789F48 /* RelWithDebInfo */ = {
+		0DBA17D088004487B00A2737 /* RelWithDebInfo */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -532,64 +404,65 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				CONFIGURATION_BUILD_DIR = "/Users/tkreutz/axiom-trader/build/RelWithDebInfo";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = DE6D96335Q;
 				EXECUTABLE_PREFIX = "";
 				EXECUTABLE_SUFFIX = "";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 2;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"/Users/tkreutz/axiom-trader/include",
-					"/Users/tkreutz/axiom-trader/external/imgui",
-					"/Users/tkreutz/axiom-trader/external/imgui/backends",
-					"$(inherited)",
-				);
+				HEADER_SEARCH_PATHS = ("/Users/tkreutz/axiom-trader","/Users/tkreutz/axiom-trader/external/imgui","/Users/tkreutz/axiom-trader/external/imgui/backends","$(inherited)");
 				INFOPLIST_FILE = "/Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist";
 				INSTALL_PATH = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					/opt/homebrew/lib,
-					"$(inherited)",
-				);
+				LD_RUNPATH_SEARCH_PATHS = (/opt/homebrew/lib,"$(inherited)");
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = (
-					"-DNDEBUG",
-					"'-std=gnu++20'",
-				);
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					/opt/homebrew/lib/libglfw.3.4.dylib,
-					"-framework",
-					Cocoa,
-					"-framework",
-					Metal,
-					"-framework",
-					MetalKit,
-					"-framework",
-					QuartzCore,
-					"-lobjc",
-					"$(inherited)",
-				);
+				OTHER_CPLUSPLUSFLAGS = "       -DNDEBUG '-std=gnu++20' ";
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names",/opt/homebrew/lib/libglfw.3.4.dylib,"-framework Cocoa","-framework Metal","-framework MetalKit","-framework QuartzCore","-lobjc","$(inherited)");
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = AxiomTrader;
 				SECTORDER_FLAGS = "";
-				SYSTEM_HEADER_SEARCH_PATHS = (
-					/opt/homebrew/include,
-					"$(inherited)",
-				);
+				SYSTEM_HEADER_SEARCH_PATHS = (/opt/homebrew/include,"$(inherited)");
 				TARGET_TEMP_DIR = "/Users/tkreutz/axiom-trader/build/build/AxiomTrader.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
 				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
+				WARNING_CFLAGS = ("$(inherited)");
 			};
 			name = RelWithDebInfo;
 		};
-		9990820E0AD14518BE9BAAAC /* RelWithDebInfo */ = {
+		217421F514C94471814595C3 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/tkreutz/axiom-trader/build/MinSizeRel";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = ("/Users/tkreutz/axiom-trader","/Users/tkreutz/axiom-trader/external/imgui","/Users/tkreutz/axiom-trader/external/imgui/backends","$(inherited)");
+				INFOPLIST_FILE = "/Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist";
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = (/opt/homebrew/lib,"$(inherited)");
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG '-std=gnu++20' ";
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names",/opt/homebrew/lib/libglfw.3.4.dylib,"-framework Cocoa","-framework Metal","-framework MetalKit","-framework QuartzCore","-lobjc","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = AxiomTrader;
+				SECTORDER_FLAGS = "";
+				SYSTEM_HEADER_SEARCH_PATHS = (/opt/homebrew/include,"$(inherited)");
+				TARGET_TEMP_DIR = "/Users/tkreutz/axiom-trader/build/build/AxiomTrader.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		26847D1734EE422EA03EA903 /* MinSizeRel */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -598,23 +471,269 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = "";
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = " $(inherited)";
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		3DD98733E0A14C2AB937B17A /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				SDKROOT = "";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SYMROOT = "/Users/tkreutz/axiom-trader/build/build";
+			};
+			name = MinSizeRel;
+		};
+		3FE89B5CF02442D69FE6A254 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/tkreutz/axiom-trader/build/Debug";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = ("/Users/tkreutz/axiom-trader","/Users/tkreutz/axiom-trader/external/imgui","/Users/tkreutz/axiom-trader/external/imgui/backends","$(inherited)");
+				INFOPLIST_FILE = "/Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist";
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = (/opt/homebrew/lib,"$(inherited)");
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CPLUSPLUSFLAGS = "   '-std=gnu++20' ";
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names",/opt/homebrew/lib/libglfw.3.4.dylib,"-framework Cocoa","-framework Metal","-framework MetalKit","-framework QuartzCore","-lobjc","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = AxiomTrader;
+				SECTORDER_FLAGS = "";
+				SYSTEM_HEADER_SEARCH_PATHS = (/opt/homebrew/include,"$(inherited)");
+				TARGET_TEMP_DIR = "/Users/tkreutz/axiom-trader/build/build/AxiomTrader.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		72E3331F7D384880837A164E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = ("","$(inherited)");
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ZERO_CHECK;
 				SECTORDER_FLAGS = "";
 				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		78F67DB31A0E42808D0530AC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		7F55B003FBE045CDBFBF2AB4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Debug;
+		};
+		8B20095B3E3244A78DD35485 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "/Users/tkreutz/axiom-trader/build/Release";
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = ("/Users/tkreutz/axiom-trader","/Users/tkreutz/axiom-trader/external/imgui","/Users/tkreutz/axiom-trader/external/imgui/backends","$(inherited)");
+				INFOPLIST_FILE = "/Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist";
+				INSTALL_PATH = "";
+				LD_RUNPATH_SEARCH_PATHS = (/opt/homebrew/lib,"$(inherited)");
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG '-std=gnu++20' ";
+				OTHER_LDFLAGS = (" -Wl,-search_paths_first -Wl,-headerpad_max_install_names",/opt/homebrew/lib/libglfw.3.4.dylib,"-framework Cocoa","-framework Metal","-framework MetalKit","-framework QuartzCore","-lobjc","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = AxiomTrader;
+				SECTORDER_FLAGS = "";
+				SYSTEM_HEADER_SEARCH_PATHS = (/opt/homebrew/include,"$(inherited)");
+				TARGET_TEMP_DIR = "/Users/tkreutz/axiom-trader/build/build/AxiomTrader.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		9E600DD6D54741BDB2EDF32A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = Release;
+		};
+		9FD6D8FC3C7248FC9967A1DC /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		A332A5D029594DF6993F7D43 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
 			};
 			name = RelWithDebInfo;
 		};
-		B1E55C6A2D104B49AED8F9E8 /* Release */ = {
+		D0A7AA63F4114B7ABEF0167D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				SDKROOT = "";
+				SYMROOT = "/Users/tkreutz/axiom-trader/build/build";
+			};
+			name = Debug;
+		};
+		D782DF8EB546462989161DE3 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'","$(inherited)");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = ("","$(inherited)");
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		E310C60582444D37A88EBCF4 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				SDKROOT = "";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SYMROOT = "/Users/tkreutz/axiom-trader/build/build";
+			};
+			name = RelWithDebInfo;
+		};
+		F9E4ECDEDE0748F689F584DF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = arm64;
@@ -624,214 +743,49 @@
 			};
 			name = Release;
 		};
-		D4D52523BE894085866724B2 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = " $(inherited)";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = Release;
-		};
-		DB3B99DE189940E38FF388A1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = " $(inherited)";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = Debug;
-		};
-		DF957DE3444242518737EF90 /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = " $(inherited)";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = RelWithDebInfo;
-		};
-		E7CFAC32327540B9B74DB7A1 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "/Users/tkreutz/axiom-trader/build/MinSizeRel";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = DE6D96335Q;
-				EXECUTABLE_PREFIX = "";
-				EXECUTABLE_SUFFIX = "";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = s;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"/Users/tkreutz/axiom-trader/include",
-					"/Users/tkreutz/axiom-trader/external/imgui",
-					"/Users/tkreutz/axiom-trader/external/imgui/backends",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "/Users/tkreutz/axiom-trader/build/CMakeFiles/AxiomTrader.dir/Info.plist";
-				INSTALL_PATH = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					/opt/homebrew/lib,
-					"$(inherited)",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CPLUSPLUSFLAGS = (
-					"-DNDEBUG",
-					"'-std=gnu++20'",
-				);
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					/opt/homebrew/lib/libglfw.3.4.dylib,
-					"-framework",
-					Cocoa,
-					"-framework",
-					Metal,
-					"-framework",
-					MetalKit,
-					"-framework",
-					QuartzCore,
-					"-lobjc",
-					"$(inherited)",
-				);
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = AxiomTrader;
-				SECTORDER_FLAGS = "";
-				SYSTEM_HEADER_SEARCH_PATHS = (
-					/opt/homebrew/include,
-					"$(inherited)",
-				);
-				TARGET_TEMP_DIR = "/Users/tkreutz/axiom-trader/build/build/AxiomTrader.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = MinSizeRel;
-		};
-		FFE2BC4BC72742B381BA47C0 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = arm64;
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = " $(inherited)";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = "$(inherited)";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		56B8C30D2EE34C4EB7D460D1 /* Build configuration list for PBXNativeTarget "AxiomTrader" */ = {
+		215FB689D0D5405AB7A3E05F /* Build configuration list for PBXProject "AxiomTrader" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				957B8A18B9C0417DA4DE7F3B /* Debug */,
-				86F2D1E5AC5049C8AD7E3B68 /* Release */,
-				E7CFAC32327540B9B74DB7A1 /* MinSizeRel */,
-				97C1B1D24DC2414FA9789F48 /* RelWithDebInfo */,
+				D0A7AA63F4114B7ABEF0167D /* Debug */,
+				F9E4ECDEDE0748F689F584DF /* Release */,
+				3DD98733E0A14C2AB937B17A /* MinSizeRel */,
+				E310C60582444D37A88EBCF4 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		6CB909CAF40D48D7BB714A29 /* Build configuration list for PBXProject "AxiomTrader" */ = {
+		921427C3B84749C484385DC8 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9451088848BC4FA4B2DCFF1D /* Debug */,
-				B1E55C6A2D104B49AED8F9E8 /* Release */,
-				49BB4ACB0EB846D2A49C4D84 /* MinSizeRel */,
-				1E91F2EB2A8B4913AFC53C82 /* RelWithDebInfo */,
+				72E3331F7D384880837A164E /* Debug */,
+				9E600DD6D54741BDB2EDF32A /* Release */,
+				9FD6D8FC3C7248FC9967A1DC /* MinSizeRel */,
+				A332A5D029594DF6993F7D43 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		7ADA502D9B4143D18C457AE0 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
+		B18335B8007F41E88EAEABD8 /* Build configuration list for PBXNativeTarget "AxiomTrader" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				08C90122F72149D8A0A417CF /* Debug */,
-				FFE2BC4BC72742B381BA47C0 /* Release */,
-				8349671076C1463F93165FCE /* MinSizeRel */,
-				9990820E0AD14518BE9BAAAC /* RelWithDebInfo */,
+				3FE89B5CF02442D69FE6A254 /* Debug */,
+				8B20095B3E3244A78DD35485 /* Release */,
+				217421F514C94471814595C3 /* MinSizeRel */,
+				0DBA17D088004487B00A2737 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		964BD3FD657E47E0A6C7698A /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
+		D6E3AAB8CAD448C59F76FD82 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				DB3B99DE189940E38FF388A1 /* Debug */,
-				D4D52523BE894085866724B2 /* Release */,
-				04B018E1E8CF4F4190977361 /* MinSizeRel */,
-				DF957DE3444242518737EF90 /* RelWithDebInfo */,
+				7F55B003FBE045CDBFBF2AB4 /* Debug */,
+				78F67DB31A0E42808D0530AC /* Release */,
+				26847D1734EE422EA03EA903 /* MinSizeRel */,
+				D782DF8EB546462989161DE3 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
