@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
-project(AxiomTrader LANGUAGES CXX OBJCXX)
+
+project(AxiomTrader
+    LANGUAGES CXX OBJCXX
+)
 
 # ============================================================
 # Global Settings
@@ -7,21 +10,23 @@ project(AxiomTrader LANGUAGES CXX OBJCXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew")
-
 # ============================================================
 # Dependencies
 # ============================================================
 find_package(glfw3 REQUIRED)
+find_package(SQLite3 REQUIRED)
 
+# ============================================================
 # Dear ImGui (local checkout)
+# ============================================================
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
 
 # ============================================================
 # GUI APP Target (EIN Target, EIN main)
 # ============================================================
 add_executable(AxiomTrader MACOSX_BUNDLE
-    src/ui/main_gui.mm          # ✅ EINZIGES main()
+    # Entry point (EINZIGES main)
+    src/ui/main_gui.mm
 
     # Core
     Axiom/Trade.cpp
@@ -37,28 +42,40 @@ add_executable(AxiomTrader MACOSX_BUNDLE
     ${IMGUI_DIR}/backends/imgui_impl_metal.mm
 )
 
+# ============================================================
+# Include Directories (nur Projekt + ImGui)
+# ============================================================
 target_include_directories(AxiomTrader PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
-    /opt/homebrew/include
 )
 
+# ============================================================
+# Link Libraries
+# ============================================================
 target_link_libraries(AxiomTrader PRIVATE
     glfw
+    SQLite3::SQLite3
     "-framework Cocoa"
     "-framework Metal"
     "-framework MetalKit"
     "-framework QuartzCore"
 )
 
-# Erzwinge ObjC++ dort, wo Cocoa/Metal drin ist
+# ============================================================
+# ObjC++ enforcement for Metal / Cocoa files
+# ============================================================
 set_source_files_properties(
     src/ui/main_gui.mm
     ${IMGUI_DIR}/backends/imgui_impl_metal.mm
-    PROPERTIES LANGUAGE OBJCXX
+    PROPERTIES
+        LANGUAGE OBJCXX
 )
 
+# ============================================================
+# macOS / Xcode specific properties
+# ============================================================
 set_target_properties(AxiomTrader PROPERTIES
     XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
     XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "15.0"
