@@ -24,3 +24,10 @@ DerivedData/
 
 # ImGui state
 imgui.ini
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+

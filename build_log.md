@@ -25,3 +25,29 @@ work.
 - ✅ Build clean
 - ✅ Core logic deterministic
 - ✅ Ready for DAO integration (Trade / AssetSpec)
+
+## 2026‑05‑12 — Stage D: SQLite persistence stabilization
+
+### Summary
+- Completed Stage D core persistence integration.
+- Database is now created automatically by SQLite on first run.
+- AssetSpec and Trade persistence initialized deterministically at startup.
+
+### Technical Details
+- Refactored SQLite wrapper (`Sqlite.hpp`) to be header‑only and free of side effects.
+- Removed premature sqlite3_prepare_v2 calls from DAO constructors.
+- Introduced lazy statement preparation triggered after `ensureSchema()`.
+- Applied identical fix pattern to both `AssetSpecDao` and `TradeDao`.
+- Added detailed SQLite error context (rc + errstr + errmsg) for debugging.
+
+### Result
+- ✅ Build clean
+- ✅ Application starts without crashes
+- ✅ Tables `AssetSpec` and `Trade` are created automatically
+- ✅ Persistence layer ready for further extension (Async / Worker model)
+
+### Next Steps (Deferred)
+- Optional: Stage D2 — async DB worker to remove I/O from UI thread
+- Optional: GUI‑level error reporting instead of abort on DB errors
+
+

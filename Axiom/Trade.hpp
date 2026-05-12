@@ -1,4 +1,4 @@
-//
+///
 //  Trade.hpp
 //  AxiomTrader
 //
@@ -41,8 +41,6 @@ namespace Axiom {
         
 
     private:
-        static bool looksLikeFx(std::string_view s) noexcept;
-        static bool isJpyQuote(std::string_view s) noexcept;
         static std::uint32_t stableColorFromSymbol(std::string_view s) noexcept;
     };
 

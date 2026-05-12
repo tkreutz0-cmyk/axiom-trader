@@ -10,20 +10,21 @@ class AssetSpecDao {
 public:
     explicit AssetSpecDao(Connection& c);
 
-    void ensureSchema(); // optional: legt Tabellen an, falls du das hier machen willst
+    void ensureSchema();
 
-    void upsert(const AssetSpecRow& row);
+    void upsert(const AssetSpecRow& r);
     std::optional<AssetSpecRow> getBySymbol(const std::string& symbol);
     std::vector<AssetSpecRow> getAll();
     bool exists(const std::string& symbol);
 
 private:
-    Connection& c_;
+    void prepareStatements();
 
-    Statement stUpsert_;
-    Statement stGetBySymbol_;
-    Statement stGetAll_;
-    Statement stExists_;
+    Connection& c_;
+    std::optional<Statement> stUpsert_;
+    std::optional<Statement> stGetBySymbol_;
+    std::optional<Statement> stGetAll_;
+    std::optional<Statement> stExists_;
 };
 
 } // namespace axiom::db

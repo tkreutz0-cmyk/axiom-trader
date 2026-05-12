@@ -11,17 +11,6 @@ double Trade::priceDelta() const noexcept {
     return exit - entry;
 }
 
-bool Trade::looksLikeFx(std::string_view s) noexcept {
-    // Heuristik: "EUR/USD" -> '/' an Position 3 und Länge >= 7
-    const auto pos = s.find('/');
-    return (pos == 3 && s.size() >= 7);
-}
-
-bool Trade::isJpyQuote(std::string_view s) noexcept {
-    const auto pos = s.find('/');
-    if (pos == std::string_view::npos) return false;
-    return s.substr(pos + 1) == "JPY";
-}
 
 double Trade::calculatePips() const noexcept {
     const double delta = priceDelta();
@@ -67,15 +56,16 @@ std::uint32_t Trade::stableColorFromSymbol(std::string_view s) noexcept {
 }
 
 void Trade::refreshMetadata() noexcept {
-    meta.isFX  = looksLikeFx(symbol);
-    meta.isJPY = meta.isFX ? isJpyQuote(symbol) : false;
+    // Heuristik bewusst entfernt.
+    // isFX / isJPY werden von außen via AssetSpec gesetzt.
     meta.assetColorRGBA = stableColorFromSymbol(symbol);
 }
 
 void Trade::setSymbol(std::string_view s) {
     symbol.assign(s.data(), s.size());
-    refreshMetadata();
+    refreshMetadata(); // nur Farbe, KEINE Logik
 }
+
 
 
 } // namespace Axiom

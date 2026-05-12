@@ -22,14 +22,18 @@ find_package(SQLite3 REQUIRED)
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
 
 # ============================================================
-# GUI APP Target (EIN Target, EIN main)
+# GUI APP Target (EIN Target)
 # ============================================================
 add_executable(AxiomTrader MACOSX_BUNDLE
-    # Entry point (EINZIGES main)
+    # Entry point
     src/ui/main_gui.mm
 
     # Core
     Axiom/Trade.cpp
+
+    # DB layer (Implementierungen)
+    Axiom/AssetSpecDao.cpp
+    Axiom/TradeDao.cpp
 
     # ImGui core
     ${IMGUI_DIR}/imgui.cpp
@@ -43,7 +47,7 @@ add_executable(AxiomTrader MACOSX_BUNDLE
 )
 
 # ============================================================
-# Include Directories (nur Projekt + ImGui)
+# Include Directories
 # ============================================================
 target_include_directories(AxiomTrader PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -64,7 +68,7 @@ target_link_libraries(AxiomTrader PRIVATE
 )
 
 # ============================================================
-# ObjC++ enforcement for Metal / Cocoa files
+# ObjC++ enforcement
 # ============================================================
 set_source_files_properties(
     src/ui/main_gui.mm

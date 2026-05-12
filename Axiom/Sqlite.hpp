@@ -1,23 +1,43 @@
 #pragma once
+
 #include <sqlite3.h>
 #include <string>
 #include <stdexcept>
 #include <utility>
 
-namespace axiom::db {
+namespace axiom {
+namespace db {
 
+// ------------------------------------------------------------
+// Error type
+// ------------------------------------------------------------
 struct SqliteError : std::runtime_error {
     int code;
     explicit SqliteError(int c, const std::string& msg)
         : std::runtime_error(msg), code(c) {}
 };
 
+// ------------------------------------------------------------
+// Error helper
+// ------------------------------------------------------------
 inline void throwOnError(int rc, sqlite3* db, const char* context) {
     if (rc == SQLITE_OK || rc == SQLITE_ROW || rc == SQLITE_DONE) return;
-    const char* err = db ? sqlite3_errmsg(db) : "no db";
-    throw SqliteError(rc, std::string(context) + ": " + err);
+
+    const char* errMsg  = db ? sqlite3_errmsg(db) : "no db";
+    const char* errName = sqlite3_errstr(rc);
+
+    // Beispiel: "sqlite3_prepare_v2 [rc=1 SQLITE_ERROR]: no such table: AssetSpec"
+    throw SqliteError(
+        rc,
+        std::string(context)
+            + " [rc=" + std::to_string(rc) + " " + (errName ? errName : "UNKNOWN") + "]: "
+            + (errMsg ? errMsg : "no message")
+    );
 }
 
+// ------------------------------------------------------------
+// Connection (RAII)
+// ------------------------------------------------------------
 class Connection {
 public:
     Connection() = default;
@@ -27,7 +47,9 @@ public:
     Connection(const Connection&) = delete;
     Connection& operator=(const Connection&) = delete;
 
-    Connection(Connection&& other) noexcept : db_(std::exchange(other.db_, nullptr)) {}
+    Connection(Connection&& other) noexcept
+        : db_(std::exchange(other.db_, nullptr)) {}
+
     Connection& operator=(Connection&& other) noexcept {
         if (this != &other) {
             close();
@@ -43,7 +65,8 @@ public:
             const char* err = db_ ? sqlite3_errmsg(db_) : "open failed";
             throw SqliteError(rc, std::string("sqlite3_open: ") + err);
         }
-        // sinnvolle Defaults (optional):
+
+        // sensible defaults
         exec("PRAGMA foreign_keys = ON;");
         exec("PRAGMA journal_mode = WAL;");
         exec("PRAGMA synchronous = NORMAL;");
@@ -70,6 +93,9 @@ private:
     sqlite3* db_ = nullptr;
 };
 
+// ------------------------------------------------------------
+// Prepared Statement
+// ------------------------------------------------------------
 class Statement {
 public:
     Statement() = default;
@@ -105,20 +131,29 @@ public:
 
     int step() {
         int rc = sqlite3_step(stmt_);
-        if (rc != SQLITE_ROW && rc != SQLITE_DONE) throwOnError(rc, db_, "sqlite3_step");
+        if (rc != SQLITE_ROW && rc != SQLITE_DONE)
+            throwOnError(rc, db_, "sqlite3_step");
         return rc;
     }
 
-    sqlite3_stmt* handle() const noexcept { return stmt_; }
-
     // Bind helpers
-    void bindInt(int idx, int v) { throwOnError(sqlite3_bind_int(stmt_, idx, v), db_, "bind_int"); }
-    void bindInt64(int idx, sqlite3_int64 v) { throwOnError(sqlite3_bind_int64(stmt_, idx, v), db_, "bind_int64"); }
-    void bindDouble(int idx, double v) { throwOnError(sqlite3_bind_double(stmt_, idx, v), db_, "bind_double"); }
-    void bindText(int idx, const std::string& v) {
-        throwOnError(sqlite3_bind_text(stmt_, idx, v.c_str(), (int)v.size(), SQLITE_TRANSIENT), db_, "bind_text");
+    void bindInt(int idx, int v) {
+        throwOnError(sqlite3_bind_int(stmt_, idx, v), db_, "bind_int");
     }
-    void bindNull(int idx) { throwOnError(sqlite3_bind_null(stmt_, idx), db_, "bind_null"); }
+    void bindInt64(int idx, sqlite3_int64 v) {
+        throwOnError(sqlite3_bind_int64(stmt_, idx, v), db_, "bind_int64");
+    }
+    void bindDouble(int idx, double v) {
+        throwOnError(sqlite3_bind_double(stmt_, idx, v), db_, "bind_double");
+    }
+    void bindText(int idx, const std::string& v) {
+        throwOnError(
+            sqlite3_bind_text(stmt_, idx, v.c_str(), (int)v.size(), SQLITE_TRANSIENT),
+            db_, "bind_text");
+    }
+    void bindNull(int idx) {
+        throwOnError(sqlite3_bind_null(stmt_, idx), db_, "bind_null");
+    }
 
     // Column helpers
     int colInt(int idx) const { return sqlite3_column_int(stmt_, idx); }
@@ -129,7 +164,9 @@ public:
         int n = sqlite3_column_bytes(stmt_, idx);
         return t ? std::string((const char*)t, (size_t)n) : std::string();
     }
-    bool colIsNull(int idx) const { return sqlite3_column_type(stmt_, idx) == SQLITE_NULL; }
+    bool colIsNull(int idx) const {
+        return sqlite3_column_type(stmt_, idx) == SQLITE_NULL;
+    }
 
 private:
     void finalize() {
@@ -141,14 +178,32 @@ private:
     sqlite3_stmt* stmt_ = nullptr;
 };
 
+// ------------------------------------------------------------
+// Transaction helper
+// ------------------------------------------------------------
 class Transaction {
 public:
-    explicit Transaction(Connection& c) : c_(c), committed_(false) { c_.exec("BEGIN;"); }
-    ~Transaction() { if (!committed_) { try { c_.exec("ROLLBACK;"); } catch (...) {} } }
-    void commit() { c_.exec("COMMIT;"); committed_ = true; }
+    explicit Transaction(Connection& c)
+        : c_(c), committed_(false) {
+        c_.exec("BEGIN;");
+    }
+
+    ~Transaction() {
+        if (!committed_) {
+            try { c_.exec("ROLLBACK;"); } catch (...) {}
+        }
+    }
+
+    void commit() {
+        c_.exec("COMMIT;");
+        committed_ = true;
+    }
+
 private:
     Connection& c_;
     bool committed_;
 };
 
-} // namespace axiom::db
+} // namespace db
+} // namespace axiom
+

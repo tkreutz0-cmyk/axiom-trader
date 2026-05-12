@@ -7,10 +7,8 @@ R"SQL(
 INSERT INTO Trade(
   symbol, side, entry_price, exit_price, quantity,
   entry_time, exit_time, venue, comment, created_at, updated_at
-) VALUES(
-  ?, ?, ?, ?, ?,
-  ?, ?, ?, ?, ?, ?
 )
+VALUES( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
 )SQL";
 
 static constexpr const char* SQL_TRADE_UPDATE =
@@ -90,15 +88,26 @@ static TradeRow readTradeRow(Statement& st) {
 
 TradeDao::TradeDao(Connection& c)
 : c_(c)
-, stInsert_(c.handle(), SQL_TRADE_INSERT)
-, stUpdate_(c.handle(), SQL_TRADE_UPDATE)
-, stGetById_(c.handle(), SQL_TRADE_GETBYID)
-, stLoadAll_(c.handle(), SQL_TRADE_LOADALL)
-, stLoadBySymbol_(c.handle(), SQL_TRADE_LOADBYSYMBOL)
-, stDelete_(c.handle(), SQL_TRADE_DELETE)
-{}
+{
+    // KEINE Statement-Prepares im Konstruktor!
+    // Statements werden erst nach ensureSchema() (oder lazy beim ersten Call) prepared.
+}
 
-void TradeDao::ensureSchema() {
+void TradeDao::prepareStatements()
+{
+    // Idempotent
+    if (stInsert_.has_value()) return;
+
+    stInsert_.emplace(c_.handle(), SQL_TRADE_INSERT);
+    stUpdate_.emplace(c_.handle(), SQL_TRADE_UPDATE);
+    stGetById_.emplace(c_.handle(), SQL_TRADE_GETBYID);
+    stLoadAll_.emplace(c_.handle(), SQL_TRADE_LOADALL);
+    stLoadBySymbol_.emplace(c_.handle(), SQL_TRADE_LOADBYSYMBOL);
+    stDelete_.emplace(c_.handle(), SQL_TRADE_DELETE);
+}
+
+void TradeDao::ensureSchema()
+{
     c_.exec(R"SQL(
 CREATE TABLE IF NOT EXISTS Trade (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -112,103 +121,131 @@ CREATE TABLE IF NOT EXISTS Trade (
   venue TEXT NOT NULL,
   comment TEXT,
   created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL,
-  FOREIGN KEY(symbol) REFERENCES AssetSpec(symbol)
-    ON UPDATE CASCADE
-    ON DELETE RESTRICT
+  updated_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_trade_symbol ON Trade(symbol);
 CREATE INDEX IF NOT EXISTS idx_trade_entry  ON Trade(entry_time);
 CREATE INDEX IF NOT EXISTS idx_trade_exit   ON Trade(exit_time);
 )SQL");
+
+    // Nach Schema: Statements vorbereiten
+    prepareStatements();
 }
 
-int64_t TradeDao::insert(TradeRow r) {
-    stInsert_.reset();
-    stInsert_.bindText(1, r.symbol);
-    stInsert_.bindInt(2, static_cast<int>(r.side));
-    stInsert_.bindDouble(3, r.entryPrice);
+int64_t TradeDao::insert(TradeRow r)
+{
+    prepareStatements();
 
-    if (r.exitPrice) stInsert_.bindDouble(4, *r.exitPrice);
-    else stInsert_.bindNull(4);
+    auto& st = *stInsert_;
+    st.reset();
 
-    stInsert_.bindDouble(5, r.quantity);
-    stInsert_.bindInt64(6, r.entryTime);
+    st.bindText(1, r.symbol);
+    st.bindInt(2, static_cast<int>(r.side));
+    st.bindDouble(3, r.entryPrice);
 
-    if (r.exitTime) stInsert_.bindInt64(7, *r.exitTime);
-    else stInsert_.bindNull(7);
+    if (r.exitPrice) st.bindDouble(4, *r.exitPrice);
+    else st.bindNull(4);
 
-    stInsert_.bindText(8, r.venue);
+    st.bindDouble(5, r.quantity);
+    st.bindInt64(6, r.entryTime);
 
-    if (r.comment) stInsert_.bindText(9, *r.comment);
-    else stInsert_.bindNull(9);
+    if (r.exitTime) st.bindInt64(7, *r.exitTime);
+    else st.bindNull(7);
 
-    stInsert_.bindInt64(10, r.createdAt);
-    stInsert_.bindInt64(11, r.updatedAt);
+    st.bindText(8, r.venue);
 
-    stInsert_.step(); // DONE
+    if (r.comment) st.bindText(9, *r.comment);
+    else st.bindNull(9);
+
+    st.bindInt64(10, r.createdAt);
+    st.bindInt64(11, r.updatedAt);
+
+    st.step(); // DONE
     return sqlite3_last_insert_rowid(c_.handle());
 }
 
-void TradeDao::update(const TradeRow& r) {
-    stUpdate_.reset();
-    stUpdate_.bindText(1, r.symbol);
-    stUpdate_.bindInt(2, static_cast<int>(r.side));
-    stUpdate_.bindDouble(3, r.entryPrice);
+void TradeDao::update(const TradeRow& r)
+{
+    prepareStatements();
 
-    if (r.exitPrice) stUpdate_.bindDouble(4, *r.exitPrice);
-    else stUpdate_.bindNull(4);
+    auto& st = *stUpdate_;
+    st.reset();
 
-    stUpdate_.bindDouble(5, r.quantity);
-    stUpdate_.bindInt64(6, r.entryTime);
+    st.bindText(1, r.symbol);
+    st.bindInt(2, static_cast<int>(r.side));
+    st.bindDouble(3, r.entryPrice);
 
-    if (r.exitTime) stUpdate_.bindInt64(7, *r.exitTime);
-    else stUpdate_.bindNull(7);
+    if (r.exitPrice) st.bindDouble(4, *r.exitPrice);
+    else st.bindNull(4);
 
-    stUpdate_.bindText(8, r.venue);
+    st.bindDouble(5, r.quantity);
+    st.bindInt64(6, r.entryTime);
 
-    if (r.comment) stUpdate_.bindText(9, *r.comment);
-    else stUpdate_.bindNull(9);
+    if (r.exitTime) st.bindInt64(7, *r.exitTime);
+    else st.bindNull(7);
 
-    stUpdate_.bindInt64(10, r.updatedAt);
-    stUpdate_.bindInt64(11, r.id);
+    st.bindText(8, r.venue);
 
-    stUpdate_.step(); // DONE
+    if (r.comment) st.bindText(9, *r.comment);
+    else st.bindNull(9);
+
+    st.bindInt64(10, r.updatedAt);
+    st.bindInt64(11, r.id);
+
+    st.step(); // DONE
 }
 
-std::optional<TradeRow> TradeDao::getById(int64_t id) {
-    stGetById_.reset();
-    stGetById_.bindInt64(1, id);
+std::optional<TradeRow> TradeDao::getById(int64_t id)
+{
+    prepareStatements();
 
-    if (stGetById_.step() == SQLITE_ROW) {
-        return readTradeRow(stGetById_);
+    auto& st = *stGetById_;
+    st.reset();
+    st.bindInt64(1, id);
+
+    if (st.step() == SQLITE_ROW) {
+        return readTradeRow(st);
     }
     return std::nullopt;
 }
 
-std::vector<TradeRow> TradeDao::loadAll() {
+std::vector<TradeRow> TradeDao::loadAll()
+{
+    prepareStatements();
+
     std::vector<TradeRow> out;
-    stLoadAll_.reset();
-    while (stLoadAll_.step() == SQLITE_ROW) {
-        out.push_back(readTradeRow(stLoadAll_));
+    auto& st = *stLoadAll_;
+    st.reset();
+
+    while (st.step() == SQLITE_ROW) {
+        out.push_back(readTradeRow(st));
     }
     return out;
 }
 
-std::vector<TradeRow> TradeDao::loadBySymbol(const std::string& symbol) {
+std::vector<TradeRow> TradeDao::loadBySymbol(const std::string& symbol)
+{
+    prepareStatements();
+
     std::vector<TradeRow> out;
-    stLoadBySymbol_.reset();
-    stLoadBySymbol_.bindText(1, symbol);
-    while (stLoadBySymbol_.step() == SQLITE_ROW) {
-        out.push_back(readTradeRow(stLoadBySymbol_));
+    auto& st = *stLoadBySymbol_;
+    st.reset();
+    st.bindText(1, symbol);
+
+    while (st.step() == SQLITE_ROW) {
+        out.push_back(readTradeRow(st));
     }
     return out;
 }
 
-void TradeDao::removeById(int64_t id) {
-    stDelete_.reset();
-    stDelete_.bindInt64(1, id);
-    stDelete_.step();
+void TradeDao::removeById(int64_t id)
+{
+    prepareStatements();
+
+    auto& st = *stDelete_;
+    st.reset();
+    st.bindInt64(1, id);
+    st.step();
 }
 
 } // namespace axiom::db

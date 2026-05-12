@@ -33,13 +33,25 @@ SELECT 1 FROM AssetSpec WHERE symbol = ? LIMIT 1
 
 AssetSpecDao::AssetSpecDao(Connection& c)
 : c_(c)
-, stUpsert_(c.handle(), SQL_ASSETSPEC_UPSERT)
-, stGetBySymbol_(c.handle(), SQL_ASSETSPEC_GET)
-, stGetAll_(c.handle(), SQL_ASSETSPEC_ALL)
-, stExists_(c.handle(), SQL_ASSETSPEC_EXISTS)
-{}
+{
+    // NOTE:
+    // Keine Statement-Prepares im Konstruktor!
+    // Statements werden erst nach ensureSchema() vorbereitet (lazy).
+}
 
-void AssetSpecDao::ensureSchema() {
+void AssetSpecDao::prepareStatements()
+{
+    // Idempotent: falls bereits vorbereitet, nichts tun.
+    if (stUpsert_.has_value()) return;
+
+    stUpsert_.emplace(c_.handle(), SQL_ASSETSPEC_UPSERT);
+    stGetBySymbol_.emplace(c_.handle(), SQL_ASSETSPEC_GET);
+    stGetAll_.emplace(c_.handle(), SQL_ASSETSPEC_ALL);
+    stExists_.emplace(c_.handle(), SQL_ASSETSPEC_EXISTS);
+}
+
+void AssetSpecDao::ensureSchema()
+{
     c_.exec(R"SQL(
 CREATE TABLE IF NOT EXISTS AssetSpec (
   symbol TEXT PRIMARY KEY,
@@ -49,54 +61,75 @@ CREATE TABLE IF NOT EXISTS AssetSpec (
   created_at INTEGER NOT NULL
 );
 )SQL");
+
+    // Nach dem Schema dürfen wir Statements preparen.
+    prepareStatements();
 }
 
-void AssetSpecDao::upsert(const AssetSpecRow& r) {
-    stUpsert_.reset();
-    stUpsert_.bindText(1, r.symbol);
-    stUpsert_.bindInt(2, static_cast<int>(r.assetType));
-    stUpsert_.bindDouble(3, r.pipSize);
-    stUpsert_.bindDouble(4, r.contractSize);
-    stUpsert_.bindInt64(5, r.createdAt);
+void AssetSpecDao::upsert(const AssetSpecRow& r)
+{
+    // Defensive: falls jemand upsert() vor ensureSchema() aufruft,
+    // werden Statements hier spätestens vorbereitet.
+    prepareStatements();
 
-    stUpsert_.step(); // DONE
+    auto& st = *stUpsert_;
+    st.reset();
+    st.bindText(1, r.symbol);
+    st.bindInt(2, static_cast<int>(r.assetType));
+    st.bindDouble(3, r.pipSize);
+    st.bindDouble(4, r.contractSize);
+    st.bindInt64(5, r.createdAt);
+    st.step(); // DONE
 }
 
-std::optional<AssetSpecRow> AssetSpecDao::getBySymbol(const std::string& symbol) {
-    stGetBySymbol_.reset();
-    stGetBySymbol_.bindText(1, symbol);
+std::optional<AssetSpecRow> AssetSpecDao::getBySymbol(const std::string& symbol)
+{
+    prepareStatements();
 
-    if (stGetBySymbol_.step() == SQLITE_ROW) {
+    auto& st = *stGetBySymbol_;
+    st.reset();
+    st.bindText(1, symbol);
+
+    if (st.step() == SQLITE_ROW) {
         AssetSpecRow r;
-        r.symbol = stGetBySymbol_.colText(0);
-        r.assetType = static_cast<AssetType>(stGetBySymbol_.colInt(1));
-        r.pipSize = stGetBySymbol_.colDouble(2);
-        r.contractSize = stGetBySymbol_.colDouble(3);
-        r.createdAt = stGetBySymbol_.colInt64(4);
+        r.symbol       = st.colText(0);
+        r.assetType    = static_cast<AssetType>(st.colInt(1));
+        r.pipSize      = st.colDouble(2);
+        r.contractSize = st.colDouble(3);
+        r.createdAt    = st.colInt64(4);
         return r;
     }
     return std::nullopt;
 }
 
-std::vector<AssetSpecRow> AssetSpecDao::getAll() {
+std::vector<AssetSpecRow> AssetSpecDao::getAll()
+{
+    prepareStatements();
+
     std::vector<AssetSpecRow> out;
-    stGetAll_.reset();
-    while (stGetAll_.step() == SQLITE_ROW) {
+    auto& st = *stGetAll_;
+    st.reset();
+
+    while (st.step() == SQLITE_ROW) {
         AssetSpecRow r;
-        r.symbol = stGetAll_.colText(0);
-        r.assetType = static_cast<AssetType>(stGetAll_.colInt(1));
-        r.pipSize = stGetAll_.colDouble(2);
-        r.contractSize = stGetAll_.colDouble(3);
-        r.createdAt = stGetAll_.colInt64(4);
+        r.symbol       = st.colText(0);
+        r.assetType    = static_cast<AssetType>(st.colInt(1));
+        r.pipSize      = st.colDouble(2);
+        r.contractSize = st.colDouble(3);
+        r.createdAt    = st.colInt64(4);
         out.push_back(std::move(r));
     }
     return out;
 }
 
-bool AssetSpecDao::exists(const std::string& symbol) {
-    stExists_.reset();
-    stExists_.bindText(1, symbol);
-    return stExists_.step() == SQLITE_ROW;
+bool AssetSpecDao::exists(const std::string& symbol)
+{
+    prepareStatements();
+
+    auto& st = *stExists_;
+    st.reset();
+    st.bindText(1, symbol);
+    return st.step() == SQLITE_ROW;
 }
 
 } // namespace axiom::db
