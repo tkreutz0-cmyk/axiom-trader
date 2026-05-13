@@ -35,12 +35,3 @@ AXIOM-Trader follows the **"Blender Model"**: full UI sovereignty, zero App Stor
 ---
 **Status:** `Checkpoint v0.4.0-alpha - Build Stable`  
 **Platform:** macOS 15.x (Apple Silicon Optimized)
-
-# AXIOM-Trader (Development Snapshot v0.4.0-alpha)
-
-![Build Status](github.com)
-[![Platform: macOS](https://shields.io)](https://github.com/tkreutz0-cmyk/axiom-trader)
-[![Language: C++20](https://shields.io)](https://github.com/tkreutz0-cmyk/axiom-trader)
-
-A high-performance, deterministic trading journal for macOS, built with a "Desktop-First" philosophy.
-
