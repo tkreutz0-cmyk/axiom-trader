@@ -31,9 +31,11 @@ add_executable(AxiomTrader MACOSX_BUNDLE
     # Core
     Axiom/Trade.cpp
 
-    # DB layer (Implementierungen)
+    # DB layer (Implementierungen & neuer RAII StorageManager)
     Axiom/AssetSpecDao.cpp
     Axiom/TradeDao.cpp
+    Axiom/StorageManager.hpp
+    Axiom/StorageManager.cpp
 
     # ImGui core
     ${IMGUI_DIR}/imgui.cpp
@@ -83,4 +85,13 @@ set_source_files_properties(
 set_target_properties(AxiomTrader PROPERTIES
     XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
     XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "15.0"
+)
+
+# ============================================================
+# Code Signing für lokale Ausführung auf Apple Silicon (M5 Pro)
+# ============================================================
+set_target_properties(AxiomTrader PROPERTIES
+    XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "-"
+    XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED YES
+    XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED YES
 )
