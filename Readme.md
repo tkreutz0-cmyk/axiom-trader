@@ -35,3 +35,13 @@ AXIOM-Trader follows the **"Blender Model"**: full UI sovereignty, zero App Stor
 ---
 **Status:** `Checkpoint v0.4.0-alpha - Build Stable`  
 **Platform:** macOS 15.x (Apple Silicon Optimized)
+
+## 🤖 Generation & Development Model (AI-Generated, Human-Architected)
+
+AXIOM-Trader is a pure **AI-Native Software Engineering** project. It represents a paradigm shift in how high-performance desktop applications are built:
+
+*   **Architecture & Vision:** Synthesized, directed, and structurally designed by the human architect. Every architectural constraint (C++20 determinism, zero-latency Metal-layer hosting, local data sovereignty) was defined and guarded by human oversight.
+*   **Codebase & Implementation:** 100% written, refactored, and debugged by AI agents (Claude, OpenAI, and Apple Xcode Predictive Models). Not a single line of production C++20 or Objective-C++ code was typed by hand.
+
+This symbiosis proves that high-performance, close-to-metal trading software can be reliably generated if the underlying system architecture is tightly steered by a human counterpart.
+
