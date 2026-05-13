@@ -51,3 +51,7 @@ work.
 - Optional: GUI‑level error reporting instead of abort on DB errors
 
 
+
+## [v0.4.0-alpha] - 2026-05-13:
+- Vorbereitung der persistenten SQLite-Datenbank
+- Test des M365 Copilot PO-Workflows
