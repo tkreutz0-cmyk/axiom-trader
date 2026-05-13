@@ -30,4 +30,8 @@ imgui.ini
 *.db-shm
 *.db-wal
 
+# Emacs / Editor backup files
+*~
+\#*\#
+.\#*
 
