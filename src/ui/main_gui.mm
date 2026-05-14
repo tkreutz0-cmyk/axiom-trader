@@ -17,6 +17,9 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_metal.h"
 
+// ---- UI / MAP ----
+#include "MapTexture.hpp"
+
 #import <Cocoa/Cocoa.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>

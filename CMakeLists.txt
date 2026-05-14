@@ -53,6 +53,7 @@ add_executable(AxiomTrader MACOSX_BUNDLE
 # ============================================================
 target_include_directories(AxiomTrader PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
 )
@@ -73,7 +74,12 @@ target_link_libraries(AxiomTrader PRIVATE
 # ObjC++ enforcement
 # ============================================================
 set_source_files_properties(
+    src/ui/MapTexture.mm
     src/ui/main_gui.mm
+    
+# UI
+    src/ui/MapTexture.mm
+
     ${IMGUI_DIR}/backends/imgui_impl_metal.mm
     PROPERTIES
         LANGUAGE OBJCXX
