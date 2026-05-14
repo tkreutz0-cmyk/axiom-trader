@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <new>
 
+
 // stb_image: Laden von Bilddateien (PNG/JPG/etc.)
 //
 // WICHTIG:
@@ -21,8 +22,7 @@
     #endif
 #endif
 
-// Optional: Nur wenn du iOS-spezifische Warnungen vermeiden willst,
-// kannst du STBI_NO_THREAD_LOCALS setzen. Für Desktop ist es i.d.R. ok.
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 namespace

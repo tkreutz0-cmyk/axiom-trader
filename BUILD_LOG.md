@@ -55,3 +55,32 @@ work.
 ## [v0.4.0-alpha] - 2026-05-13:
 - Vorbereitung der persistenten SQLite-Datenbank
 - Test des M365 Copilot PO-Workflows
+
+---
+
+## Build Log (macOS / Metal / CMake)
+
+### 2026‑05‑14 — Stage D1: Trading Map Infrastructure
+
+**Status:** ✅ stable
+
+Changes / Fixes:
+- Added `MapTexture` RAII wrapper (stb_image + Metal `MTLTexture`)
+- Fixed Objective‑C++ ARC bridging (`__bridge void*`) for Metal device handoff
+- Registered `MapTexture.mm` explicitly in CMake target to avoid linker errors
+- Integrated `stb_image.h` as external single‑header dependency
+- Added `assets/world_map.png` as **macOS bundle resource** via
+  `MACOSX_PACKAGE_LOCATION Resources`
+- World map now loads via `NSBundle mainBundle` and renders in a dedicated
+  ImGui window (“Trading Map”)
+
+Notes:
+- Assets inside `assets/` are **not available at runtime** unless explicitly
+  added to the app bundle.
+- When using `MACOSX_BUNDLE`, all runtime assets must be registered via CMake
+  `target_sources(...)` + `MACOSX_PACKAGE_LOCATION`.
+
+Known limitations:
+- Map currently renders static (no zoom / pan)
+- No trade markers yet (planned for Stage D2)
+``
