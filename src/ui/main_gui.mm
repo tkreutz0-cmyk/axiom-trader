@@ -271,6 +271,21 @@ int main(int argc, char** argv)
     layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
     nswin.contentView.layer = layer;
     nswin.contentView.wantsLayer = YES;
+    
+    // ---------------- World Map (load once + upload to Metal) ----------------
+        MapTexture worldMap;
+
+        // Robust (Bundle-Resource): Lege z.B. "world_map.png" als Copy Bundle Resource ab
+        // (Xcode: Build Phases -> Copy Bundle Resources)
+        NSString* mapPath = [[NSBundle mainBundle] pathForResource:@"world_map" ofType:@"png"];
+        if (mapPath) {
+            worldMap.loadFromFile(std::string([mapPath UTF8String]), /*flipVertical=*/false);
+            worldMap.uploadToMetal((__bridge void*)device);
+        } else {
+            // Fallback (wenn du bewusst relativ aus Working Directory lädst):
+            // worldMap.loadFromFile("assets/world_map.png", false);
+            // worldMap.uploadToMetal((void*)device);
+        }
 
     // ---------------- DB init ----------------
     axiom::db::Connection conn("axiom.db");
@@ -344,6 +359,8 @@ int main(int argc, char** argv)
             ImGui::NewFrame();
 
             ImGui::Begin("AXIOM Trader - Stage D1 (SQLite)");
+            // ---------------- Trading Map ----------------
+            DrawTradingMapWindow(worldMap, 0.75f);
 
             ImGui::SeparatorText("PnL Settings");
             ImGui::InputDouble("PipValue USD/Lot##pnl_pipvalue", &pipValuePerLotUsd);

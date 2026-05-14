@@ -24,29 +24,42 @@ set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
 # ============================================================
 # GUI APP Target (EIN Target)
 # ============================================================
+
 add_executable(AxiomTrader MACOSX_BUNDLE
-    # Entry point
     src/ui/main_gui.mm
-
-    # Core
+    src/ui/MapTexture.mm
     Axiom/Trade.cpp
-
-    # DB layer (Implementierungen & neuer RAII StorageManager)
     Axiom/AssetSpecDao.cpp
     Axiom/TradeDao.cpp
-    Axiom/StorageManager.hpp
     Axiom/StorageManager.cpp
-
-    # ImGui core
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
-
-    # ImGui backends
     ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
     ${IMGUI_DIR}/backends/imgui_impl_metal.mm
 )
+
+set(AXIOM_ASSETS
+    ${CMAKE_CURRENT_SOURCE_DIR}/assets/world_map.png
+)
+
+set_source_files_properties(
+    ${AXIOM_ASSETS}
+    PROPERTIES
+        MACOSX_PACKAGE_LOCATION Resources
+)
+
+target_sources(AxiomTrader PRIVATE ${AXIOM_ASSETS})
+
+target_include_directories(AxiomTrader PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/stb
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
+)
+
 
 # ============================================================
 # Include Directories
