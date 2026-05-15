@@ -36,3 +36,7 @@ imgui.ini
 .\#*
 
 .DS_Store
+
+# Visual Studio temporäre IDE-Dateien ignorieren
+.vs/
+**/examples/.vs/
