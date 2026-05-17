@@ -37,3 +37,70 @@ Alle Preise und Geldbeträge werden ausnahmslos über eine plattformunabhängige
 * **Positiv:** Zero-Overhead im Vergleich zu komplexen Klassenstrukturen; hervorragend für den CPU-Hotpath geeignet.
 * **Negativ:** Bestehender Code in `src/core/` muss in einem großflächigen Refactoring-Schritt angepasst werden.
 * **Einfluss auf die Roadmap (v0.5.x):** Die kommende Integration von SQLite muss Beträge zwingend nur noch als Ganzzahlen (`INTEGER`) in die Datenbank schreiben.
+
+---
+
+## 5. Architektur-Update: Compiler-Souveränität & Cross-Plattform-DNA (Post-Pre-Check)
+
+### Kontext
+
+Im Rahmen eines automatisierten Pre-Checks (docs/pre-checks/0004-fixed-point-review.md) wurde ein kritischer Architekturbruch identifiziert:
+
+- Die Implementierung nutzte implizit `__int128` für interne Berechnungen
+- `__int128` ist **kein Bestandteil des C++-Standards**
+- MSVC (Windows) unterstützt diesen Typ **nicht**
+
+Dies führt zu einem plattformabhängigen Verhalten und verletzt das grundlegende Architekturprinzip des Systems.
+
+---
+
+### Architekturregel (neu etabliert)
+
+> Der Core darf ausschließlich Sprach- und Compiler-Features verwenden, die:
+> - entweder standardisiert sind
+> - oder explizit über plattformabhängige Abstraktionen abgesichert werden
+
+---
+
+### Technische Anpassung
+
+- `int64_t` bleibt der definierte Datenraum für Persistenz
+- 128-Bit-Arithmetik wird **nicht mehr implizit vorausgesetzt**
+- Stattdessen erfolgt eine explizite Behandlung:
+
+#### Plattformabhängige Implementierung
+
+- Clang / GCC:
+  - Verwendung von `__int128` als Intermediate
+
+- MSVC:
+  - Verwendung von x64-Intrinsics:
+    - `_umul128`
+    - `_udiv128`
+
+#### Verpflichtende Compiler-Guards
+
+Alle kritischen Arithmetic-Operationen müssen über Compiler-Guards abgesichert werden.
+
+---
+
+### Begründung
+
+Diese Anpassung ist keine Optimierung, sondern die Korrektur eines architektonischen Regelbruchs.
+
+Der Pre-Check hat gezeigt, dass:
+
+- Plattformabhängigkeit auch durch Compiler-Erweiterungen entsteht
+- solche Fehler erst spät im Build-Prozess sichtbar werden
+
+Durch die explizite Absicherung wird:
+
+- deterministisches Verhalten sichergestellt
+- Cross-Platform-Support garantiert
+
+---
+
+### Leitprinzip (explizit gemacht)
+
+> Plattformunabhängigkeit wird nicht dem Compiler überlassen, sondern ist eine explizit abgesicherte Eigenschaft der Architektur.
+
