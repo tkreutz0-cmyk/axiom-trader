@@ -9,14 +9,14 @@ using namespace std::chrono;
 
 TEST(WorkspaceManager_HourMinute, UTCNoOffset) {
 	int64_t epoch = 0; // 1970-01-01 00:00:00 UTC
-	auto [h,m] = workspace::ComputeLocalHourMinute(epoch, 0);
+	auto [h,m] = workspace::ComputeLocalHourMinute(epoch, workspace::TradingHub::UNKNOWN);
 	EXPECT_EQ(h, 0);
 	EXPECT_EQ(m, 0);
 }
 
 TEST(WorkspaceManager_HourMinute, MidnightOffset) {
 	int64_t epoch = 86399; // one second before day end
-	auto [h,m] = workspace::ComputeLocalHourMinute(epoch, 120); // +2 hours -> wraps to 01:59
+	auto [h,m] = workspace::ComputeLocalHourMinute(epoch, workspace::TradingHub::FRA); // FRA has +2 hours fallback
 	EXPECT_EQ(h, 1);
 	EXPECT_EQ(m, 59);
 }
