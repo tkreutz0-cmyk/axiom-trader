@@ -1,71 +1,44 @@
-# AXIOM-Trader (Development Snapshot v0.4.0-alpha)
+# AXIOM-Trader
 
-A high-performance, deterministic trading journal for macOS, built with a "Desktop-First" philosophy.
-
-## 🚀 The Vision
-AXIOM-Trader follows the **"Blender Model"**: full UI sovereignty, zero App Store friction, and maximum performance. Unlike mobile-centric apps, this project treats macOS as a professional workstation, utilizing a hybrid C++20 and Metal API stack.
-
-## 🛠 Technical Stack
-- **Core:** C++20 (Deterministic simulation and logic)
-- **Graphics:** Metal API (Native Apple Silicon acceleration via `CAMetalLayer` Hosting)
-- **GUI:** Dear ImGui (v1.9x) + GLFW
-- **Architecture:** Specialized **Layer-Hosting View** for Zero-Latency Rendering.
-
-## 📂 Current Features (Snapshot v0.4.0)
-- **AXIOM World Engine:** 
-    - **Geospatial Mapping:** Core database for global trading hubs (NYC, LDN, FRA, TYO, SYD).
-    - **Symbol-Interaction:** High-precision hit-detection (Euclidean distance check) for direct "Load-to-Edit" workflows.
-    - **Visual Hashing:** Consistent asset-coloring via symbol-based procedural hashing.
-- **SYNAPSE Master-Control:** 
-    - Integrated CRUD-system for trade management.
-    - Directional UI cues: **LONG (▲)** and **SHORT (▼)**.
-- **Layout Manager:** Integrated grid-reset logic to maintain workstation workspace stability.
-- **Retina Precision:** Synchronized framebuffer scaling against UI blur and freezing.
-
-## 🐛 Recent Hotfixes (v0.4.0)
-- Fixed **Event-Occlusion** in trade tables via improved ID-scoping.
-- Resolved **Memory Overflows** in string buffering using safe `snprintf` handling.
-- Stabilized **Metal Render Pass** descriptors via explicit index addressing.
-
-## 📅 Roadmap (v0.5.x)
-- [ ] **Infrastructure:** SQLite-Integration for deterministic trade persistence.
-- [ ] **Visuals:** `stb_image.h` integration for high-res PNG map textures.
-- [ ] **Analytics:** Real-time global PnL aggregation and equity curve visualization.
+> A deterministic, high-performance trading journal built with C++20, Dear ImGui, and Metal.
 
 ---
-**Status:** `Checkpoint v0.4.0-alpha - Build Stable`  
-**Platform:** macOS 15.x (Apple Silicon Optimized)
 
-## 🤖 Generation & Development Model (AI-Generated, Human-Architected)
+## ✨ Overview
 
-AXIOM-Trader is a pure **AI-Native Software Engineering** project. It represents a paradigm shift in how high-performance desktop applications are built:
+**AXIOM-Trader** is a desktop-first trading journal designed for performance, determinism, and architectural clarity.
 
-*   **Architecture & Vision:** Synthesized, directed, and structurally designed by the human architect. Every architectural constraint (C++20 determinism, zero-latency Metal-layer hosting, local data sovereignty) was defined and guarded by human oversight.
-*   **Codebase & Implementation:** 100% written, refactored, and debugged by AI agents (Claude, OpenAI, and Apple Xcode Predictive Models). Not a single line of production C++20 or Objective-C++ code was typed by hand.
+Unlike conventional tools, AXIOM enforces a **strict separation between domain logic and UI**, ensuring that all trading calculations remain reproducible across platforms and runs.
 
-This symbiosis proves that high-performance, close-to-metal trading software can be reliably generated if the underlying system architecture is tightly steered by a human counterpart.
+The system follows a **simulation-first philosophy**:
+> Not “what could happen” — but “what is allowed by the system’s constraints”.
 
-## 🗺 AXIOM World Engine – Pipeline Closed (Stage D1 Milestone)
+---
 
-The integration gap between the deterministic core and the UI has been fully resolved.
+## 🧠 Core Architecture
 
-### ✅ Pipeline Status
-- Core trade data is loaded from SQLite at startup
-- Deterministic transformation via `Axiom::buildClusters()` is executed in the GUI hotpath
-- Trades are rendered directly on the world map using an overlay rendering approach
+AXIOM-Trader is built around a **deterministic domain kernel**:
 
-### ✅ Visual Output
-- Trades appear immediately on the world map from the first frame
-- Geospatial mapping is stable and deterministic
-- Selection and clustering logic is functional
+- ✅ Pure C++20 domain logic (platform-independent)
+- ✅ Strict UI decoupling (no ImGui/Metal in core)
+- ✅ Reproducible calculations (PnL, pips, clustering)
+- ✅ Explicit data flow:  
+  **SQLite → Core → Transformation → UI → Rendering**
 
-### ✅ Technical Notes
-- Rendering uses Dear ImGui `Image()` + `DrawList` overlay model
-- No UI logic leaks into the core (architecture intact)
-- Pipeline follows zero-allocation principles (Stage D1 compliant)
+Key principles:
 
-### ✅ Result
-The previous "Silent Failure" state has been eliminated:  
-Data now flows continuously from **database → core → UI → rendering**.
+- Determinism over heuristics  
+- Zero overhead in hotpaths  
+- Architecture enforced via ADRs  
 
-This establishes the first fully operational vertical slice of AXIOM-Trader.
+---
+
+## 🗺 AXIOM World Engine
+
+### ✅ Stage D1 Milestone (Completed)
+
+The full rendering pipeline is now operational.
+
+#### Pipeline Status
+- Trades are loaded from SQLite at startup
+
