@@ -52,6 +52,7 @@ static axiom::db::AssetSpecRow defaultSpecForSymbol(const std::string& symbol) {
     axiom::db::AssetSpecRow r;
     r.symbol = symbol;
     r.createdAt = nowUtcEpochSeconds();
+    // KORREKTUR: Vergleich als 'char' über Einzelanführungszeichen statt String-Literal
     bool looksFx = (symbol.size() >= 7 && symbol[3] == '/');
     if (looksFx) {
         r.assetType = axiom::db::AssetType::FX;
@@ -191,8 +192,21 @@ static void drawAssetEditor(AssetSpecEditorState& ed, axiom::db::AssetSpecDao& a
     }
 }
 
+// Globale/Statische Flag zur frame-genauen Steuerung des nativen Layout-Resets
+static bool triggerNativeReset = false;
+
 static void DrawWorldMapWindow_Stable(MapTexture& worldMap, const std::vector<Axiom::Trade>& trades, int& selectedIndex, WorkspaceManager& workspaceManager) noexcept {
-    // KORREKTUR: Stark typisierter Namensraum für das Fenster-Enum
+    
+    // KORREKTUR: Dynamische Viewport-Berechnung für den Vollbildmodus (40% links / 60% rechts)
+    if (triggerNativeReset) {
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImVec2 targetPos = ImVec2(viewport->WorkPos.x + (viewport->WorkSize.x * 0.40f), viewport->WorkPos.y);
+        ImVec2 targetSize = ImVec2(viewport->WorkSize.x * 0.60f, viewport->WorkSize.y);
+        
+        ImGui::SetNextWindowPos(targetPos, ImGuiCond_Always);
+        ImGui::SetNextWindowSize(targetSize, ImGuiCond_Always);
+    }
+    
     workspaceManager.BeginWindow(WorkspaceManager::WindowId::WorldMap);
     const ImVec2 avail = ImGui::GetContentRegionAvail();
     ImTextureID tex = worldMap.imguiTextureID();
@@ -229,6 +243,7 @@ static void DrawWorldMapWindow_Stable(MapTexture& worldMap, const std::vector<Ax
                 const float d2 = dx*dx + dy*dy;
                 if (d2 <= radius*radius && d2 < bestDist) {
                     bestDist = d2;
+                    // KORREKTUR: Zugriff auf Element 0 aus dem Indizes-Vektor
                     if (count > 0) bestTradeIndex = c.tradeIndices[0];
                 }
             }
@@ -244,6 +259,7 @@ static void DrawWorldMapWindow_Stable(MapTexture& worldMap, const std::vector<Ax
             const int count = (int)c.tradeIndices.size();
             const bool hasSelected = c.hasSelected;
             if (count <= 1) {
+                // KORREKTUR: Zugriff auf Element 0 aus dem Indizes-Vektor
                 int ti = (count == 1) ? c.tradeIndices[0] : -1;
                 if (ti >= 0 && ti < (int)trades.size()) {
                     const auto& t = trades[ti];
@@ -273,6 +289,12 @@ static void DrawWorldMapWindow_Stable(MapTexture& worldMap, const std::vector<Ax
     } else {
         ImGui::TextUnformatted("Weltkarte nicht geladen oder nicht zu Metal hochgeladen.");
     }
+    
+    // CRITICAL LAYOUT RESET FIX: Schaltet die Flag nach dem Rendern des letzten Fensters hart ab
+    if (triggerNativeReset) {
+        triggerNativeReset = false;
+    }
+    
     ImGui::End();
 }
 
@@ -363,6 +385,8 @@ int main(int argc, char** argv)
             id<CAMetalDrawable> drawable = [layer nextDrawable];
             if (!drawable) continue;
             MTLRenderPassDescriptor* rp = [MTLRenderPassDescriptor renderPassDescriptor];
+            
+            // Metal API Bindings
             rp.colorAttachments[0].texture = drawable.texture;
             rp.colorAttachments[0].loadAction = MTLLoadActionClear;
             rp.colorAttachments[0].clearColor = MTLClearColorMake(0.02, 0.02, 0.03, 1.0);
@@ -372,16 +396,21 @@ int main(int argc, char** argv)
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             
-            // KORREKTUR: Scope-Präfix und korrekter Bezeichner für das Hauptfenster
+            // Layout-Trigger abfangen und natives ImGui-Vollbild-Grid setzen (Linke Spalte: 40% Breite)
+            if (triggerNativeReset) {
+                const ImGuiViewport* viewport = ImGui::GetMainViewport();
+                ImGui::SetNextWindowPos(viewport->WorkPos, ImGuiCond_Always);
+                ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x * 0.40f, viewport->WorkSize.y), ImGuiCond_Always);
+            }
+            
             workspaceManager.BeginWindow(static_cast<WorkspaceManager::WindowId>(0));
-
             ImGui::SeparatorText("PnL Settings");
             ImGui::InputDouble("PipValue USD/Lot##pnl_pipvalue", &pipValuePerLotUsd);
             ImGui::Checkbox("Non-FX as Units##pnl_nonfx_units", &treatNonFxAsUnits);
             
             ImGui::SameLine();
             if (ImGui::Button("Layout anordnen")) {
-                workspaceManager.RequestLayoutReset();
+                triggerNativeReset = true; // Aktiviert den einmaligen Layout-Zwangs-Frame
             }
             
             ImGui::SeparatorText("Trades (SQLite)");
