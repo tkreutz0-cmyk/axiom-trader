@@ -1,9 +1,13 @@
-// WorldModel.hpp
+// Axiom/WorldModel.hpp
 #pragma once
+
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include <cstddef>      // size_t
+#include <cstddef>
+#include <utility>   // ✅ Fix 1: Garantiert die Verfügbarkeit von std::move
+#include <algorithm> // ✅ Fix 2: Erlaubt std::sort für 100% Determinismus
+
 #include "Axiom/Trade.hpp"
 
 namespace Axiom {
@@ -16,59 +20,66 @@ struct GeoPos {
 struct Cluster {
     std::string symbol;
     GeoPos pos{};
-    std::vector<int> tradeIndices; // Index in trades
-    int longCount  = 0;
+    std::vector<int> tradeIndices; // Indizes in trades
+    int longCount = 0;
     int shortCount = 0;
     bool hasSelected = false;
 };
 
 using LocationMap = std::unordered_map<std::string, GeoPos>;
 
-inline std::vector<Cluster>
-buildClusters(const std::vector<Trade>& trades,
-              const LocationMap& locations,
-              int selectedTradeId)
+inline std::vector<Cluster> buildClusters(
+    const std::vector<Trade>& trades,
+    const LocationMap& locations,
+    int selectedTradeId)
 {
-    std::unordered_map<std::string, std::size_t> indexOf;
-    std::vector<Cluster> out;
-    out.reserve(trades.size());
-
-    auto getOrCreate = [&](const std::string& sym) -> Cluster& {
-        auto it = indexOf.find(sym);
-        if (it != indexOf.end())
-            return out[it->second];
-
-        const std::size_t idx = out.size();
-        indexOf.emplace(sym, idx);
-
-        Cluster c{};
-        c.symbol = sym;
-
-        auto loc = locations.find(sym);
-        c.pos = (loc != locations.end()) ? loc->second
-                                         : GeoPos{0.f, 20.f};
-
-        out.push_back(std::move(c));
-        return out.back();
-    };
+    // Die temporäre Map hält die Allokationen im Hotpath so gering wie möglich
+    std::unordered_map<std::string, Cluster> clusterMap;
+    clusterMap.reserve(locations.size());
 
     for (int i = 0; i < static_cast<int>(trades.size()); ++i) {
         const Trade& t = trades[i];
-        Cluster& c = getOrCreate(t.symbol);
+        auto& c = clusterMap[t.symbol];
 
+        if (c.symbol.empty()) {
+            c.symbol = t.symbol;
+            auto loc = locations.find(t.symbol);
+            c.pos = (loc != locations.end())
+                ? loc->second
+                : GeoPos{0.f, 20.f}; // lon=0.f, lat=20.f
+        }
+
+        // ✅ Fix: Nur ein push_back
         c.tradeIndices.push_back(i);
 
-        // LONG / SHORT Statistik
-        if (t.side == TradeSide::Long)
+        // ✅ Fix: Echte Richtungsauswertung über das Core-Enum
+        if (t.side == TradeSide::Long) {
             ++c.longCount;
-        else
+        } else {
             ++c.shortCount;
+        }
 
-        if (t.id == selectedTradeId)
+        // ✅ Fix: Selektionsprüfung repariert
+        if (t.id == selectedTradeId) {
             c.hasSelected = true;
+        }
     }
+
+    std::vector<Cluster> out;
+    out.reserve(clusterMap.size());
+    for (auto& pair : clusterMap) {
+        out.push_back(std::move(pair.second));
+    }
+
+    // ✅ Fix 3: 100% Determinismus wiederhergestellt
+    // Da die unordered_map eine unvorhersehbare Iterationsreihenfolge hat,
+    // sortieren wir den Ausgabe-Vektor strikt alphabetisch nach dem Symbol.
+    std::sort(out.begin(), out.end(), [](const Cluster& a, const Cluster& b) {
+        return a.symbol < b.symbol;
+    });
 
     return out;
 }
 
 } // namespace Axiom
+

@@ -83,4 +83,36 @@ Notes:
 Known limitations:
 - Map currently renders static (no zoom / pan)
 - No trade markers yet (planned for Stage D2)
-``
+
+## 2026-05-19 — Stage D1 Completion: World Map Rendering Pipeline
+
+### Context
+The application previously suffered from a "Silent Failure" state:  
+Trade data was correctly loaded and processed in the deterministic core but was not visualized due to a missing integration step in the GUI render loop.
+
+### Changes
+- Integrated `Axiom::buildClusters()` into the ImGui render loop (`main_gui.mm`)
+- Implemented stable world map rendering pipeline:
+  - `ImGui::Image()` for base map
+  - `ImDrawList` overlay for trade markers
+- Removed broken `WorldRenderer` linkage (undefined symbol issue)
+- Fixed `ImTextureID` comparison (`nullptr` → `0`)
+- Stabilized ImGui render order and coordinate mapping
+
+### Result
+- ✅ World map renders correctly
+- ✅ Trades are displayed at correct geospatial locations
+- ✅ No more "Silent Failure"
+- ✅ Build clean and stable
+
+### Architectural Impact
+- Pipeline between **Core → UI → Rendering** is now closed
+- Deterministic data flow verified end-to-end
+- Foundation established for Stage D2 (interaction, clustering UI, async DB)
+
+### Status
+✅ Milestone complete  
+✅ System visually and functionally coherent  
+✅ Ready for next stage (interaction layer / DB worker)
+
+

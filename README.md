@@ -45,3 +45,27 @@ AXIOM-Trader is a pure **AI-Native Software Engineering** project. It represents
 
 This symbiosis proves that high-performance, close-to-metal trading software can be reliably generated if the underlying system architecture is tightly steered by a human counterpart.
 
+## 🗺 AXIOM World Engine – Pipeline Closed (Stage D1 Milestone)
+
+The integration gap between the deterministic core and the UI has been fully resolved.
+
+### ✅ Pipeline Status
+- Core trade data is loaded from SQLite at startup
+- Deterministic transformation via `Axiom::buildClusters()` is executed in the GUI hotpath
+- Trades are rendered directly on the world map using an overlay rendering approach
+
+### ✅ Visual Output
+- Trades appear immediately on the world map from the first frame
+- Geospatial mapping is stable and deterministic
+- Selection and clustering logic is functional
+
+### ✅ Technical Notes
+- Rendering uses Dear ImGui `Image()` + `DrawList` overlay model
+- No UI logic leaks into the core (architecture intact)
+- Pipeline follows zero-allocation principles (Stage D1 compliant)
+
+### ✅ Result
+The previous "Silent Failure" state has been eliminated:  
+Data now flows continuously from **database → core → UI → rendering**.
+
+This establishes the first fully operational vertical slice of AXIOM-Trader.

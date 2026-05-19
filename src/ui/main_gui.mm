@@ -12,6 +12,7 @@
 #include <optional>
 #include <chrono>
 #include <cstring>
+#include <algorithm> // std::min, std::max
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -19,6 +20,10 @@
 
 // ---- UI / MAP ----
 #include "MapTexture.hpp"
+#include "include/ui/WorkspaceManager.hpp"
+// #include "include/ui/WorldRenderer.hpp" // <-- bewusst entfernt (nicht nötig für den Fix)
+
+#include "Axiom/WorldModel.hpp"
 
 #import <Cocoa/Cocoa.h>
 #import <Metal/Metal.h>
@@ -233,6 +238,156 @@ static void drawAssetEditor(AssetSpecEditorState& ed,
     }
 }
 
+// -----------------------------------------------------------------------------
+// WORLD MAP WINDOW (stabiler Fix):
+// - zeichnet IMMER zuerst die Map (ImGui::Image)
+// - nutzt danach GetItemRectMin/Max für exakte Overlay-Koordinaten
+// - zeichnet dann deterministisch Cluster/Trades als Overlay
+// -----------------------------------------------------------------------------
+static void DrawWorldMapWindow_Stable(
+    MapTexture& worldMap,
+    const std::vector<Axiom::Trade>& trades,
+    int& selectedIndex) noexcept
+{
+    ImGui::Begin("World Map");
+
+    const ImVec2 avail = ImGui::GetContentRegionAvail();
+    ImTextureID tex = worldMap.imguiTextureID();
+
+    if (tex != 0 && avail.x > 8.0f && avail.y > 8.0f){
+        // 1) Map zeichnen
+        ImGui::Image(tex, avail);
+
+        // 2) Exakte Map-Rect nach dem Image holen
+        const ImVec2 mapMin = ImGui::GetItemRectMin();
+        const ImVec2 mapMax = ImGui::GetItemRectMax();
+        const ImVec2 mapSize = ImVec2(mapMax.x - mapMin.x, mapMax.y - mapMin.y);
+
+        // 3) DrawList für Overlay
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        dl->PushClipRect(mapMin, mapMax, true);
+
+        // 4) Locations (symbol -> lon/lat). (lon vor lat!)
+        static Axiom::LocationMap geoLocations = {
+            {"EUR/USD", {  8.6821f, 50.1107f}}, // FRA
+            {"USD/JPY", {139.6503f, 35.6762f}}, // TYO
+            {"GBP/USD", { -0.1278f, 51.5074f}}, // LDN
+            {"BTC/USD", { -74.0060f, 40.7128f}} // NYC
+        };
+
+        const int selectedTradeId =
+            (selectedIndex >= 0 && selectedIndex < (int)trades.size())
+            ? trades[selectedIndex].id
+            : -1;
+
+        // 5) Cluster deterministisch berechnen (Core)
+        const std::vector<Axiom::Cluster> clusters =
+            Axiom::buildClusters(trades, geoLocations, selectedTradeId);
+
+        // 6) Klick: einfachen Select auf nächsten Cluster (kein Popup, stabil)
+        const ImVec2 mouse = ImGui::GetMousePos();
+        const bool mouseInMap =
+            (mouse.x >= mapMin.x && mouse.x <= mapMax.x &&
+             mouse.y >= mapMin.y && mouse.y <= mapMax.y);
+
+        if (mouseInMap && ImGui::IsMouseClicked(0)) {
+            float bestDist = 1e9f;
+            int bestTradeIndex = -1;
+
+            for (const auto& c : clusters) {
+                // Equirectangular: u/v aus lon/lat
+                const float u = (c.pos.lon + 180.0f) * (1.0f / 360.0f);
+                const float v = (90.0f - c.pos.lat) * (1.0f / 180.0f);
+
+                const ImVec2 base = ImVec2(
+                    mapMin.x + u * mapSize.x,
+                    mapMin.y + v * mapSize.y
+                );
+
+                const int count = (int)c.tradeIndices.size();
+                float radius = (count <= 1) ? 10.0f : (14.0f + std::min(14.0f, count * 0.8f));
+
+                const float dx = mouse.x - base.x;
+                const float dy = mouse.y - base.y;
+                const float d2 = dx*dx + dy*dy;
+
+                if (d2 <= radius*radius && d2 < bestDist) {
+                    bestDist = d2;
+                    if (count > 0) bestTradeIndex = c.tradeIndices[0]; // stabil: erstes Element
+                }
+            }
+
+            if (bestTradeIndex >= 0 && bestTradeIndex < (int)trades.size()) {
+                selectedIndex = bestTradeIndex;
+            }
+        }
+
+        // 7) Render: Cluster/Markers
+        for (const auto& c : clusters) {
+            const float u = (c.pos.lon + 180.0f) * (1.0f / 360.0f);
+            const float v = (90.0f - c.pos.lat) * (1.0f / 180.0f);
+
+            const ImVec2 base = ImVec2(
+                mapMin.x + u * mapSize.x,
+                mapMin.y + v * mapSize.y
+            );
+
+            const int count = (int)c.tradeIndices.size();
+            const bool hasSelected = c.hasSelected;
+
+            if (count <= 1) {
+                // Single trade marker: Triangle up/down
+                int ti = (count == 1) ? c.tradeIndices[0] : -1;
+                if (ti >= 0 && ti < (int)trades.size()) {
+                    const auto& t = trades[ti];
+                    const ImU32 col = (t.side == Axiom::TradeSide::Long)
+                        ? IM_COL32(60, 220, 80, 220)
+                        : IM_COL32(220, 60, 60, 220);
+
+                    if (t.side == Axiom::TradeSide::Long) {
+                        dl->AddTriangleFilled(
+                            ImVec2(base.x, base.y - 7),
+                            ImVec2(base.x - 6, base.y + 4),
+                            ImVec2(base.x + 6, base.y + 4),
+                            col
+                        );
+                    } else {
+                        dl->AddTriangleFilled(
+                            ImVec2(base.x, base.y + 7),
+                            ImVec2(base.x - 6, base.y - 4),
+                            ImVec2(base.x + 6, base.y - 4),
+                            col
+                        );
+                    }
+
+                    if (hasSelected) {
+                        dl->AddCircle(base, 12.0f, IM_COL32(255,255,255,230), 16, 2.0f);
+                    }
+                }
+            } else {
+                // Cluster marker: circle with count
+                const float radius = 14.0f + std::min(14.0f, count * 0.8f);
+                const ImU32 colFill = IM_COL32(120, 150, 220, 170);
+                const ImU32 colRing = hasSelected ? IM_COL32(255,255,255,230) : IM_COL32(20,20,25,220);
+
+                dl->AddCircleFilled(base, radius, colFill, 24);
+                dl->AddCircle(base, radius, colRing, 24, 2.0f);
+
+                char buf[16];
+                std::snprintf(buf, sizeof(buf), "%d", count);
+                ImVec2 ts = ImGui::CalcTextSize(buf);
+                dl->AddText(ImVec2(base.x - ts.x*0.5f, base.y - ts.y*0.5f), IM_COL32(255,255,255,235), buf);
+            }
+        }
+
+        dl->PopClipRect();
+    } else {
+        ImGui::TextUnformatted("Weltkarte nicht geladen oder nicht zu Metal hochgeladen.");
+    }
+
+    ImGui::End();
+}
+
 int main(int argc, char** argv)
 {
     (void)argc; (void)argv;
@@ -271,21 +426,21 @@ int main(int argc, char** argv)
     layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
     nswin.contentView.layer = layer;
     nswin.contentView.wantsLayer = YES;
-    
-    // ---------------- World Map (load once + upload to Metal) ----------------
-        MapTexture worldMap;
 
-        // Robust (Bundle-Resource): Lege z.B. "world_map.png" als Copy Bundle Resource ab
-        // (Xcode: Build Phases -> Copy Bundle Resources)
-        NSString* mapPath = [[NSBundle mainBundle] pathForResource:@"world_map" ofType:@"png"];
-        if (mapPath) {
-            worldMap.loadFromFile(std::string([mapPath UTF8String]), /*flipVertical=*/false);
-            worldMap.uploadToMetal((__bridge void*)device);
-        } else {
-            // Fallback (wenn du bewusst relativ aus Working Directory lädst):
-            // worldMap.loadFromFile("assets/world_map.png", false);
-            // worldMap.uploadToMetal((void*)device);
-        }
+    // ---------------- World Map (load once + upload to Metal) ----------------
+    MapTexture worldMap;
+
+    // Robust (Bundle-Resource): Lege z.B. "world_map.png" als Copy Bundle Resource ab
+    // (Xcode: Build Phases -> Copy Bundle Resources)
+    NSString* mapPath = [[NSBundle mainBundle] pathForResource:@"world_map" ofType:@"png"];
+    if (mapPath) {
+        worldMap.loadFromFile(std::string([mapPath UTF8String]), /*flipVertical=*/false);
+        worldMap.uploadToMetal((__bridge void*)device);
+    } else {
+        // Fallback (wenn du bewusst relativ aus Working Directory lädst):
+        // worldMap.loadFromFile("assets/world_map.png", false);
+        // worldMap.uploadToMetal((void*)device);
+    }
 
     // ---------------- DB init ----------------
     axiom::db::Connection conn("axiom.db");
@@ -358,9 +513,8 @@ int main(int argc, char** argv)
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            // ---------------- Main UI Window ----------------
             ImGui::Begin("AXIOM Trader - Stage D1 (SQLite)");
-            // ---------------- Trading Map ----------------
-            DrawTradingMapWindow(worldMap, 0.75f);
 
             ImGui::SeparatorText("PnL Settings");
             ImGui::InputDouble("PipValue USD/Lot##pnl_pipvalue", &pipValuePerLotUsd);
@@ -390,7 +544,7 @@ int main(int argc, char** argv)
                     ImGui::TableSetColumnIndex(1);
                     if (ImGui::Selectable(t.symbol.c_str(), selectedIndex == i)) {
                         selectedIndex = i;
-                        snprintf(assetBuf, sizeof(assetBuf), "%s", t.symbol.c_str());
+                        std::snprintf(assetBuf, sizeof(assetBuf), "%s", t.symbol.c_str());
                         entryBuf = t.entry;
                         exitBuf  = t.exit;
                         unitsBuf = t.units;
@@ -520,8 +674,12 @@ int main(int argc, char** argv)
             // draw modal last
             drawAssetEditor(assetEditor, assetDao, assetCache, trades);
 
-            ImGui::End();
+            ImGui::End(); // end main window
 
+            // ---------------- World Map Window (separat, stabil) ----------------
+            DrawWorldMapWindow_Stable(worldMap, trades, selectedIndex);
+
+            // ---------------- Render ----------------
             id<MTLCommandBuffer> cb = [commandQueue commandBuffer];
             id<MTLRenderCommandEncoder> ce =
                 [cb renderCommandEncoderWithDescriptor:rp];
