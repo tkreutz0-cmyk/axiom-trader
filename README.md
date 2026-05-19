@@ -42,3 +42,8 @@ The full rendering pipeline is now operational.
 #### Pipeline Status
 - Trades are loaded from SQLite at startup
 
+### UI & Workspace Management
+Das System unterstützt ein automatisiertes, symmetrisches Fenster-Arrangement (Grid-Verhältnis: 25% | 50% | 25%). 
+
+- **Bedienung**: Klicken Sie im Hauptfenster ("AXIOM Trader") unter den *PnL Settings* auf den Button **"Layout anordnen"**.
+- **Entwickler-Hinweis**: Neue ImGui-Fenster müssen über `workspaceManager.BeginWindow(WorkspaceManager::WindowId::...)` registriert werden, anstatt das native `ImGui::Begin()` zu nutzen, damit sie vom Layout-Grid erfasst werden.

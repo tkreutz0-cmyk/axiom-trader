@@ -116,3 +116,14 @@ Trade data was correctly loaded and processed in the deterministic core but was 
 ✅ Ready for next stage (interaction layer / DB worker)
 
 
+===================================================================
+BUILD LOG: RE-ENABLING WORKSPACE ARRANGEMENT (Stage D1.1)
+===================================================================
+- Task: Restore automatic window layout anchoring via WorkspaceManager.
+- Technical Fixes:
+  * Resolved 'Use of undeclared identifier' by shifting manager instantiation to UI state block.
+  * Corrected 'axiom::ui' namespace error (WorkspaceManager resides in global axiom/root scope).
+  * Shipped strongly-typed window binding via WorkspaceManager::WindowId enums.
+  * Disambiguated WindowId conflict against standard int main() using explicit typing.
+- Status: Build Succeeded. Symmetrical layout grid triggers correctly on button press.
+
