@@ -1,49 +1,234 @@
 # AXIOM-Trader
 
-> A deterministic, high-performance trading journal built with C++20, Dear ImGui, and Metal.
+> Deterministic Trading Journal Engine (C++20 / ImGui / Metal)
 
 ---
 
-## ✨ Overview
+## Overview
 
-**AXIOM-Trader** is a desktop-first trading journal designed for performance, determinism, and architectural clarity.
+AXIOM-Trader ist kein klassisches Trading-Journal.
 
-Unlike conventional tools, AXIOM enforces a **strict separation between domain logic and UI**, ensuring that all trading calculations remain reproducible across platforms and runs.
+Es ist eine deterministische Simulationsplattform, die sicherstellt,
+dass nur gültige Systemzustände entstehen – nicht nur angezeigt werden.
 
-The system follows a **simulation-first philosophy**:
-> Not “what could happen” — but “what is allowed by the system’s constraints”.
-
----
-
-## 🧠 Core Architecture
-
-AXIOM-Trader is built around a **deterministic domain kernel**:
-
-- ✅ Pure C++20 domain logic (platform-independent)
-- ✅ Strict UI decoupling (no ImGui/Metal in core)
-- ✅ Reproducible calculations (PnL, pips, clustering)
-- ✅ Explicit data flow:  
-  **SQLite → Core → Transformation → UI → Rendering**
-
-Key principles:
-
-- Determinism over heuristics  
-- Zero overhead in hotpaths  
-- Architecture enforced via ADRs  
+"Nicht was passieren könnte — sondern was erlaubt ist."
 
 ---
 
-## 🗺 AXIOM World Engine
+## Core Prinzipien
 
-### ✅ Stage D1 Milestone (Completed)
+- Determinismus über das gesamte System
+- Strict Separation: Core vs UI
+- Zero-Overhead im Hotpath
+- Architektur > Features
 
-The full rendering pipeline is now operational.
+---
 
-#### Pipeline Status
-- Trades are loaded from SQLite at startup
+## Architektur (End-to-End Pipeline)
 
-### UI & Workspace Management
-Das System unterstützt ein automatisiertes, symmetrisches Fenster-Arrangement (Grid-Verhältnis: 25% | 50% | 25%). 
+SQLite → Domain Kernel → Mapping → UI → Rendering
 
-- **Bedienung**: Klicken Sie im Hauptfenster ("AXIOM Trader") unter den *PnL Settings* auf den Button **"Layout anordnen"**.
-- **Entwickler-Hinweis**: Neue ImGui-Fenster müssen über `workspaceManager.BeginWindow(WorkspaceManager::WindowId::...)` registriert werden, anstatt das native `ImGui::Begin()` zu nutzen, damit sie vom Layout-Grid erfasst werden.
+### Pipeline Status
+
+- Daten geladen ✅
+- Core verarbeitet ✅
+- UI dargestellt ✅
+- Rendering sichtbar ✅
+
+→ Pipeline vollständig geschlossen (kein Silent Failure mehr)
+
+---
+
+## Domain Kernel (C++20)
+
+Der Core ist:
+
+- vollständig plattformunabhängig
+- frei von UI-Abhängigkeiten
+- deterministisch
+
+### Regeln
+
+- kein ImGui
+- kein Metal / OS Code
+- keine Heuristiken
+- nur reine Domänenlogik
+
+---
+
+## Deterministische Geldberechnung (ADR-0004)
+
+Money Definition (Fixed Point):
+
+    using Money = fixed_point<int64_t, 10000>;
+
+### Regeln
+
+- keine float oder double im Core
+- nur int64-basierte Fixed-Point Arithmetik
+
+### Vorteile
+
+- keine Rundungsfehler
+- vollständige Reproduzierbarkeit
+- plattformunabhängig
+
+---
+
+## Persistence Layer (SQLite)
+
+### Architektur
+
+- DAO Pattern:
+  - TradeDao
+  - AssetSpecDao
+
+### Features
+
+- automatisches Schema (`ensureSchema()`)
+- Lazy Statement Preparation
+- deterministischer Start
+- ausführliche Fehlerdiagnostik
+
+---
+
+## Mapping Layer (DB ↔ Core)
+
+Trennung:
+
+- DB: int64 raw values
+- Core: Money (FixedPoint)
+
+### Vorteile
+
+- keine impliziten Konvertierungen
+- keine Datenverluste
+- klare Verantwortlichkeiten
+
+---
+
+## AXIOM World Engine (Stage D1)
+
+### Features
+
+- Weltkarte (Metal Texture)
+- Trade-Marker (Long / Short)
+- Clusterbildung
+- deterministische Sortierung
+
+---
+
+## Rendering Pipeline (Critical Fix)
+
+### Problem
+
+- Daten vorhanden
+- UI aktiv
+- nichts sichtbar ("Silent Failure")
+
+### Ursache
+
+- fehlende Integration in Render Loop
+
+### Lösung
+
+- Integration von buildClusters()
+- Fix der ImGui Render-Reihenfolge
+- korrekte ImTextureID Nutzung
+
+### Ergebnis
+
+- Trades sichtbar ✅
+- Pipeline geschlossen ✅
+- stabil ✅
+
+---
+
+## UI-System
+
+Dear ImGui:
+
+- Immediate Mode GUI
+- kein retained state
+- deterministische Frame-Logik
+
+---
+
+## WorkspaceManager
+
+- deterministisches Layout
+- keine zufälligen Fensterpositionen
+- reproduzierbare UI
+
+### Grid
+
+25% | 50% | 25%
+
+---
+
+## Rendering (Metal)
+
+- native GPU Nutzung
+- RAII Resource Handling (MapTexture)
+- Bundle Resource korrekt integriert
+
+---
+
+## Tests & Validierung
+
+- Pip-Berechnung
+- PnL-Konsistenz
+- Fixed-Point Genauigkeit
+
+→ deterministisch validiert
+
+---
+
+## Architektur-Guardrails
+
+Core Regeln:
+
+- keine floats
+- keine UI im Core
+- deterministische Funktionen
+- One Definition Rule enforced
+
+---
+
+## Roadmap
+
+### Stage D2
+
+- Async DB Worker
+- Storage Command Queue
+- Non-blocking UI
+
+### Future
+
+- Simulation Engine (SYNAPSE)
+- Constraint-basierte Logik
+- Governance Engine
+
+---
+
+## Architektur-Insight
+
+AXIOM basiert nicht auf:
+
+- Prognosen
+- statistischen Modellen
+- heuristischen Annahmen
+
+sondern auf:
+
+- deterministischen Regeln
+- validierten Zuständen
+- Architektur-Governance
+
+---
+
+## Fazit
+
+AXIOM ist kein Tool.
+
+Es ist eine deterministische Engine zur Erzwingung korrekter Systemzustände.

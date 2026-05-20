@@ -127,3 +127,120 @@ BUILD LOG: RE-ENABLING WORKSPACE ARRANGEMENT (Stage D1.1)
   * Disambiguated WindowId conflict against standard int main() using explicit typing.
 - Status: Build Succeeded. Symmetrical layout grid triggers correctly on button press.
 
+# Build Log
+
+## 2026-05-19 — Stage D1 Completion: Full System Refactoring & Pipeline Closure
+
+### Context
+
+Nach mehreren inkrementellen Integrationsschritten (SQLite, Rendering, UI-State) wurde ein umfassendes Refactoring durchgeführt, um die Systemarchitektur strikt an die definierten ADRs anzupassen.
+
+Ziel:
+- Wiederherstellung vollständiger Deterministik im Core
+- Eliminierung architektonischer Regelverstöße (Guardrails)
+- Schließen der Datenpipeline: SQLite → Core → UI → Rendering
+
+---
+
+## 🔧 Refactoring Overview
+
+### 1. Core Integrity & Determinism
+
+- ✅ Vollständige Migration auf `fixed_point` für alle monetären Werte (ADR-0004)
+- ✅ Entfernung impliziter double-basierter Berechnungen im Core
+- ✅ Einführung klarer Raw-Value-Mappings (`TradeRow`, `AssetSpecRow`)
+- ✅ Deterministische Sortierung in `WorldModel::buildClusters()`
+
+→ Ergebnis: **100% reproduzierbare Berechnungen**
+
+---
+
+### 2. Persistence Layer Stabilization (SQLite)
+
+- ✅ DAO-Pattern vollständig vereinheitlicht (`TradeDao`, `AssetSpecDao`)
+- ✅ Lazy Statement Preparation eingeführt
+- ✅ `ensureSchema()` als deterministische Startphase etabliert
+- ✅ Fehlerbehandlung erweitert (`rc`, `errstr`, `errmsg`)
+
+→ Ergebnis: **stabile, vorhersehbare Datenpersistenz**
+
+---
+
+### 3. Mapping Layer (DB ↔ Core)
+
+- ✅ Einführung `TradeMapping.hpp`
+- ✅ strikte Trennung:
+  - DB = raw int64_t Werte
+  - Core = `Money` (FixedPoint)
+- ✅ Geo-Mapping ohne dynamische Allokationen (Hotpath-safe)
+
+→ Ergebnis: **klare semantische Grenzschicht**
+
+---
+
+### 4. UI Architecture & Workspace Management
+
+- ✅ Einführung `WorkspaceManager` für deterministisches Window-Layout
+- ✅ Entfernung direkter `ImGui::Begin()` Nutzung im UI-Code
+- ✅ Statically typed Window IDs (`enum class WindowId`)
+
+→ Ergebnis: **reproduzierbare UI-Zustände**
+
+---
+
+### 5. Rendering Pipeline Fix (Critical)
+
+- ✅ Integration von `buildClusters()` in Render Loop
+- ✅ Entfernung defekter `WorldRenderer`-Abhängigkeiten
+- ✅ Fix `ImTextureID` Handling (`nullptr → 0`)
+- ✅ Stabilisierung der Koordinatenprojektion
+
+→ Ergebnis:
+- ❌ Silent Failure entfernt
+- ✅ Trades sichtbar
+- ✅ End-to-End Pipeline geschlossen
+
+---
+
+### 6. Metal / Resource Handling
+
+- ✅ RAII Wrapper `MapTexture` eingeführt
+- ✅ ARC Bridge korrekt implementiert (`__bridge void*`)
+- ✅ Bundle Resource Handling via CMake angepasst
+
+→ Ergebnis: **stabile GPU-Resource-Verwaltung**
+
+---
+
+## ✅ Final System State
+
+- ✅ Build clean
+- ✅ Deterministischer Core validiert (Tests)
+- ✅ SQLite vollständig integriert
+- ✅ UI stabil und reproduzierbar
+- ✅ Rendering Pipeline geschlossen
+
+---
+
+## 🧭 Architectural Impact
+
+- Core → UI Entkopplung vollständig eingehalten
+- ADR-0004 (FixedPoint) konsequent umgesetzt
+- Determinismus systemweit erreicht
+- Grundlage für:
+  - Async DB Worker (Stage D2)
+  - Interaktive Cluster UI
+  - Erweiterte Simulationen
+
+---
+
+## 🚀 Next Steps
+
+- Stage D2:
+  - Async Persistence Layer (`StorageCommands.hpp`)
+  - Non-blocking UI
+- Interactive Map:
+  - Zoom / Pan
+  - Trade Drill-down
+- Validation Framework:
+  - Invariant Checks als Runtime Guardrails
