@@ -1,104 +1,61 @@
 cmake_minimum_required(VERSION 3.20)
+project(AxiomTrader LANGUAGES CXX OBJCXX)
 
-# ============================================================
-# Plattformunabhängige Projektschichten (Blender-Modell)
-# ============================================================
-if(APPLE)
-    project(AxiomTrader LANGUAGES CXX OBJCXX)
-else()
-    project(AxiomTrader LANGUAGES CXX)
-endif()
-
-# ============================================================
-# Global Settings
-# ============================================================
+# C++20 Standard erzwingen laut ADR-001
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ============================================================
-# Dependencies
-# ============================================================
-find_package(glfw3 REQUIRED)
-find_package(SQLite3 REQUIRED)
+# Homebrew Pfade für Apple Silicon hinzufügen
+list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew")
 
-# ============================================================
-# Dear ImGui (local checkout)
-# ============================================================
+# Abhängigkeiten finden
+find_package(glfw3 REQUIRED)
+
+# Verzeichnisse definieren
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
 
-# ============================================================
-# GUI APP Target (Plattformunabhängige Basis)
-# ============================================================
-add_executable(AxiomTrader)
-
-# Gemeinsame Core-Quelldateien (Plattformunabhängig)
-target_sources(AxiomTrader PRIVATE
+# Bereinigte Quellcodedateien
+# ✅ KORREKTUR: src/main.mm entfernt, um den duplicate symbol '_main' Fehler zu eliminieren!
+set(PROJECT_SOURCES
+    src/ui/main_gui.mm
+    src/ui/MapTexture.mm
     Axiom/Trade.cpp
-    Axiom/AssetSpecDao.cpp
     Axiom/TradeDao.cpp
-    Axiom/StorageManager.cpp
+    Axiom/AssetSpecDao.cpp
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
     ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_metal.mm
 )
 
-# Inklusions-Pfade für alle Plattformen
+# App Bundle erstellen
+add_executable(AxiomTrader MACOSX_BUNDLE ${PROJECT_SOURCES})
+
+# Ressourcen (Weltkarte) ins macOS App-Bundle kopieren
+target_sources(AxiomTrader PRIVATE assets/world_map.png)
+set_source_files_properties(assets/world_map.png PROPERTIES
+    MACOSX_PACKAGE_LOCATION Resources
+)
+
+# Include-Verzeichnisse setzen
 target_include_directories(AxiomTrader PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
-    ${CMAKE_CURRENT_SOURCE_DIR}/external/stb
+    ${CMAKE_CURRENT_SOURCE_DIR}/Axiom
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
+    /opt/homebrew/include
 )
 
-# Link-Bibliotheken für alle Plattformen
+# Linker-Bibliotheken und macOS Frameworks zuweisen
 target_link_libraries(AxiomTrader PRIVATE
     glfw
-    SQLite3::SQLite3
+    sqlite3
+    "-framework Cocoa"
+    "-framework Metal"
+    "-framework MetalKit"
+    "-framework QuartzCore"
 )
 
-# ============================================================
-# macOS / Xcode spezifisches Target-Hosting
-# ============================================================
-if(APPLE)
-    set_target_properties(AxiomTrader PROPERTIES MACOSX_BUNDLE ON)
-
-    # macOS-spezifische Render- und UI-Dateien anhängen
-    target_sources(AxiomTrader PRIVATE
-        src/ui/main_gui.mm
-        src/ui/MapTexture.mm
-        ${IMGUI_DIR}/backends/imgui_impl_metal.mm
-    )
-
-    # Assets als macOS App-Ressourcen bündeln
-    set(AXIOM_ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/assets/world_map.png)
-    set_source_files_properties(${AXIOM_ASSETS} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    target_sources(AxiomTrader PRIVATE ${AXIOM_ASSETS})
-
-    # Frameworks für Apple Metal anbinden
-    target_link_libraries(AxiomTrader PRIVATE
-        "-framework Cocoa"
-        "-framework Metal"
-        "-framework MetalKit"
-        "-framework QuartzCore"
-    )
-
-    # Objective-C++ Compiler-Erzwingung für Apple Clang
-    set_source_files_properties(
-        src/ui/MapTexture.mm
-        src/ui/main_gui.mm
-        ${IMGUI_DIR}/backends/imgui_impl_metal.mm
-        PROPERTIES LANGUAGE OBJCXX
-    )
-
-    # Xcode Deployment und Code-Signing-Eigenschaften
-    set_target_properties(AxiomTrader PROPERTIES
-        XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
-        XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET "15.0"
-        XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "-"
-        XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED YES
-        XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED YES
-    )
-endif()

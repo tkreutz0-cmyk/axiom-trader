@@ -10,13 +10,14 @@
 #include <chrono>
 #include <cstring>
 #include <algorithm> // std::min, std::max
+#include <cmath>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_metal.h"
 // ---- UI / MAP ----
 #include "MapTexture.hpp"
-#include "include/ui/WorkspaceManager.hpp"
-// #include "include/ui/WorldRenderer.hpp" // <-- bewusst entfernt
+// ✅ KORREKTUR: Pfad angepasst, da /include bereits im Suchpfad von CMake liegt
+#include "ui/WorkspaceManager.hpp"
 #include "Axiom/WorldModel.hpp"
 #import <Cocoa/Cocoa.h>
 #import <Metal/Metal.h>
@@ -30,523 +31,520 @@
 #include "Axiom/TradeDao.hpp"
 
 static int64_t nowUtcEpochSeconds() {
-    using namespace std::chrono;
-    return duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+ using namespace std::chrono;
+ return duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
 }
 
-// ---- AssetSpec helpers (DB-backed) ----
+// ---- AssetSpec helpers (DB-backed - Refactored for int64_t Raw Values) ----
 static bool isFx(const axiom::db::AssetSpecRow& s) {
-    return s.assetType == axiom::db::AssetType::FX;
+ return s.assetType == axiom::db::AssetType::FX;
 }
-
 static bool isJpy(const axiom::db::AssetSpecRow& s) {
-    return isFx(s) && (s.pipSize >= 0.009 && s.pipSize <= 0.011);
+ // Skaliert: 0.01 * 10000 = 100 Rohwert für JPY Pips
+ return isFx(s) && (s.pipSizeRaw >= 90 && s.pipSizeRaw <= 110);
 }
-
 static void applySpecToTrade(Axiom::Trade& t, const axiom::db::AssetSpecRow& s) {
-    t.meta.isFX = isFx(s);
-    t.meta.isJPY = isJpy(s);
+ t.meta.isFX = isFx(s);
+ t.meta.isJPY = isJpy(s);
 }
-
 static axiom::db::AssetSpecRow defaultSpecForSymbol(const std::string& symbol) {
-    axiom::db::AssetSpecRow r;
-    r.symbol = symbol;
-    r.createdAt = nowUtcEpochSeconds();
-    // KORREKTUR: Vergleich als 'char' über Einzelanführungszeichen statt String-Literal
-    bool looksFx = (symbol.size() >= 7 && symbol[3] == '/');
-    if (looksFx) {
-        r.assetType = axiom::db::AssetType::FX;
-        bool quoteJpy = (symbol.size() >= 7 && symbol.substr(symbol.size() - 3) == "JPY");
-        r.pipSize = quoteJpy ? 0.01 : 0.0001;
-        r.contractSize = 100000.0;
-    } else {
-        r.assetType = axiom::db::AssetType::Crypto;
-        r.pipSize = 1.0;
-        r.contractSize = 1.0;
-    }
-    return r;
+ axiom::db::AssetSpecRow r;
+ r.symbol = symbol;
+ r.createdAt = nowUtcEpochSeconds();
+ bool looksFx = (symbol.size() >= 7 && symbol.find('/') != std::string::npos);
+ if (looksFx) {
+ r.assetType = axiom::db::AssetType::FX;
+ bool quoteJpy = (symbol.size() >= 7 && symbol.substr(symbol.size() - 3) == "JPY");
+ r.pipSizeRaw = quoteJpy ? 100 : 1; // 0.01 oder 0.0001 skaliert
+ r.contractSizeRaw = 1000000000LL;  // 100000.0 skaliert
+ } else {
+ r.assetType = axiom::db::AssetType::Crypto;
+ r.pipSizeRaw = 10000;       // 1.0 skaliert
+ r.contractSizeRaw = 10000;  // 1.0 skaliert
+ }
+ return r;
 }
 
-static axiom::db::TradeRow toTradeRow(const Axiom::Trade& t, bool isInsert) {
-    axiom::db::TradeRow r;
-    r.id = (t.id >= 0) ? (int64_t)t.id : 0;
-    r.symbol = t.symbol;
-    r.side = axiom::db::TradeSide::Long;
-    r.entryPrice = t.entry;
-    r.exitPrice = t.exit;
-    r.quantity = t.units;
-    const int64_t now = nowUtcEpochSeconds();
-    r.entryTime = now;
-    r.exitTime = std::nullopt;
-    r.venue = "";
-    r.comment = std::nullopt;
-    r.createdAt = isInsert ? now : 0;
-    r.updatedAt = now;
-    return r;
+static axiom::db::TradeRow toTradeRow(const Axiom::Trade& t, bool isInsert)
+{
+ axiom::db::TradeRow r;
+ r.id = (t.id >= 0) ? (int64_t)t.id : 0;
+ r.symbol = t.symbol;
+ r.side = axiom::db::TradeSide::Long;
+ r.entryPriceRaw = t.entry.raw();
+ r.exitPriceRaw = t.exit.raw();
+ r.quantityRaw = t.units.raw();
+ const int64_t now = nowUtcEpochSeconds();
+ r.entryTime = now;
+ r.exitTime = std::nullopt;
+ r.venue = "";
+ r.comment = std::nullopt;
+ r.createdAt = isInsert ? now : 0;
+ r.updatedAt = now;
+ return r;
 }
 
 static void applyTradeRow(Axiom::Trade& t, const axiom::db::TradeRow& r) {
-    t.id = (int)r.id;
-    t.setSymbol(r.symbol);
-    t.entry = r.entryPrice;
-    t.exit = r.exitPrice.value_or(r.entryPrice);
-    t.units = r.quantity;
+ t.id = (int)r.id;
+ t.setSymbol(r.symbol);
+ t.entry = core::utils::Money::from_raw(r.entryPriceRaw);
+ t.exit = core::utils::Money::from_raw(r.exitPriceRaw.value_or(r.entryPriceRaw));
+ t.units = core::utils::Money::from_raw(r.quantityRaw);
 }
 
 struct AssetSpecEditorState {
-    bool open = false;
-    std::string symbol;
-    axiom::db::AssetSpecRow working{};
-    bool dirty = false;
+ bool open = false;
+ std::string symbol;
+ axiom::db::AssetSpecRow working{};
+ bool dirty = false;
+ double uiPipSize = 0.0;
+ double uiContractSize = 0.0;
 };
 
 static const char* assetTypeLabel(axiom::db::AssetType t) {
-    switch (t) {
-        case axiom::db::AssetType::FX: return "FX";
-        case axiom::db::AssetType::Commodity: return "Commodity";
-        case axiom::db::AssetType::Crypto: return "Crypto";
-        default: return "CFD";
-    }
+ switch (t) {
+ case axiom::db::AssetType::FX: return "FX";
+ case axiom::db::AssetType::Commodity: return "Commodity";
+ case axiom::db::AssetType::Crypto: return "Crypto";
+ default: return "CFD";
+ }
 }
 
 static void openAssetEditor(AssetSpecEditorState& ed, const std::string& symbol, axiom::db::AssetSpecDao& dao) {
-    ed.open = true;
-    ed.symbol = symbol;
-    ed.dirty = false;
-    if (auto spec = dao.getBySymbol(symbol)) {
-        ed.working = *spec;
-    } else {
-        ed.working = defaultSpecForSymbol(symbol);
-    }
+ ed.open = true;
+ ed.symbol = symbol;
+ ed.dirty = false;
+ if (auto spec = dao.getBySymbol(symbol)) {
+ ed.working = *spec;
+ } else {
+ ed.working = defaultSpecForSymbol(symbol);
+ }
+ ed.uiPipSize = static_cast<double>(ed.working.pipSizeRaw) / 10000.0;
+ ed.uiContractSize = static_cast<double>(ed.working.contractSizeRaw) / 10000.0;
 }
 
 static void drawAssetEditor(AssetSpecEditorState& ed, axiom::db::AssetSpecDao& assetDao, std::unordered_map<std::string, axiom::db::AssetSpecRow>& cache, std::vector<Axiom::Trade>& trades) {
-    if (!ed.open) return;
-    ImGui::OpenPopup("AssetSpec Editor");
-    if (ImGui::BeginPopupModal("AssetSpec Editor", &ed.open, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Symbol: %s", ed.symbol.c_str());
-        ImGui::Separator();
-        const char* types[] = { "FX", "Commodity", "Crypto", "CFD" };
-        int typeIdx = (int)ed.working.assetType;
-        if (ImGui::Combo("Asset Type##assetspec_type", &typeIdx, types, IM_ARRAYSIZE(types))) {
-            ed.working.assetType = (axiom::db::AssetType)typeIdx;
-            ed.dirty = true;
-            if (ed.working.assetType == axiom::db::AssetType::FX) {
-                ed.working.contractSize = 100000.0;
-                ed.working.pipSize = 0.0001;
-            } else {
-                ed.working.contractSize = 1.0;
-                ed.working.pipSize = 1.0;
-            }
-        }
-        if (ImGui::InputDouble("Pip Size##assetspec_pip", &ed.working.pipSize, 0, 0, "%.6f")) {
-            ed.dirty = true;
-        }
-        if (ImGui::InputDouble("Contract Size##assetspec_contract", &ed.working.contractSize, 0, 0, "%.2f")) {
-            ed.dirty = true;
-        }
-        ImGui::SeparatorText("Presets");
-        if (ImGui::Button("FX (0.0001 / 100000)##preset_fx")) {
-            ed.working.assetType = axiom::db::AssetType::FX;
-            ed.working.pipSize = 0.0001;
-            ed.working.contractSize = 100000.0;
-            ed.dirty = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("FX JPY (0.01 / 100000)##preset_fxjpy")) {
-            ed.working.assetType = axiom::db::AssetType::FX;
-            ed.working.pipSize = 0.01;
-            ed.working.contractSize = 100000.0;
-            ed.dirty = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Crypto (1 / 1)##preset_crypto")) {
-            ed.working.assetType = axiom::db::AssetType::Crypto;
-            ed.working.pipSize = 1.0;
-            ed.working.contractSize = 1.0;
-            ed.dirty = true;
-        }
-        ImGui::Separator();
-        if (ImGui::Button("Cancel##assetspec_cancel")) {
-            ed.open = false;
-            ed.dirty = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        ImGui::BeginDisabled(!ed.dirty);
-        if (ImGui::Button("Save##assetspec_save")) {
-            if (ed.working.createdAt == 0) ed.working.createdAt = nowUtcEpochSeconds();
-            assetDao.upsert(ed.working);
-            cache[ed.symbol] = ed.working;
-            for (auto& t : trades) {
-                if (t.symbol == ed.symbol) {
-                    applySpecToTrade(t, ed.working);
-                }
-            }
-            ed.open = false;
-            ed.dirty = false;
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndDisabled();
-        ImGui::EndPopup();
-    }
+ if (!ed.open) return;
+ ImGui::OpenPopup("AssetSpec Editor");
+ if (ImGui::BeginPopupModal("AssetSpec Editor", &ed.open, ImGuiWindowFlags_AlwaysAutoResize)) {
+ ImGui::Text("Symbol: %s", ed.symbol.c_str());
+ ImGui::Separator();
+ const char* types[] = { "FX", "Commodity", "Crypto", "CFD" };
+ int typeIdx = (int)ed.working.assetType;
+ if (ImGui::Combo("Asset Type##assetspec_type", &typeIdx, types, IM_ARRAYSIZE(types))) {
+ ed.working.assetType = (axiom::db::AssetType)typeIdx;
+ ed.dirty = true;
+ if (ed.working.assetType == axiom::db::AssetType::FX) {
+ ed.uiContractSize = 100000.0;
+ ed.uiPipSize = 0.0001;
+ } else {
+ ed.uiContractSize = 1.0;
+ ed.uiPipSize = 1.0;
+ }
+ }
+ if (ImGui::InputDouble("Pip Size##assetspec_pip", &ed.uiPipSize, 0, 0, "%.6f")) {
+ ed.dirty = true;
+ }
+ if (ImGui::InputDouble("Contract Size##assetspec_contract", &ed.uiContractSize, 0, 0, "%.2f")) {
+ ed.dirty = true;
+ }
+ ImGui::SeparatorText("Presets");
+ if (ImGui::Button("FX (0.0001 / 100000)##preset_fx")) {
+ ed.working.assetType = axiom::db::AssetType::FX;
+ ed.uiPipSize = 0.0001;
+ ed.uiContractSize = 100000.0;
+ ed.dirty = true;
+ }
+ ImGui::SameLine();
+ if (ImGui::Button("FX JPY (0.01 / 100000)##preset_fxjpy")) {
+ ed.working.assetType = axiom::db::AssetType::FX;
+ ed.uiPipSize = 0.01;
+ ed.uiContractSize = 100000.0;
+ ed.dirty = true;
+ }
+ ImGui::SameLine();
+ if (ImGui::Button("Crypto (1 / 1)##preset_crypto")) {
+ ed.working.assetType = axiom::db::AssetType::Crypto;
+ ed.uiPipSize = 1.0;
+ ed.uiContractSize = 1.0;
+ ed.dirty = true;
+ }
+ ImGui::Separator();
+ if (ImGui::Button("Cancel##assetspec_cancel")) {
+ ed.open = false;
+ ed.dirty = false;
+ ImGui::CloseCurrentPopup();
+ }
+ ImGui::SameLine();
+ ImGui::BeginDisabled(!ed.dirty);
+ if (ImGui::Button("Save##assetspec_save")) {
+ if (ed.working.createdAt == 0) ed.working.createdAt = nowUtcEpochSeconds();
+ ed.working.pipSizeRaw = static_cast<int64_t>(std::round(ed.uiPipSize * 10000.0));
+ ed.working.contractSizeRaw = static_cast<int64_t>(std::round(ed.uiContractSize * 10000.0));
+ assetDao.upsert(ed.working);
+ cache[ed.symbol] = ed.working;
+ for (auto& t : trades) {
+ if (t.symbol == ed.symbol) {
+ applySpecToTrade(t, ed.working);
+ }
+ }
+ ed.open = false;
+ ed.dirty = false;
+ ImGui::CloseCurrentPopup();
+ }
+ ImGui::EndDisabled();
+ ImGui::EndPopup();
+ }
 }
 
-// Globale/Statische Flag zur frame-genauen Steuerung des nativen Layout-Resets
 static bool triggerNativeReset = false;
-
 static void DrawWorldMapWindow_Stable(MapTexture& worldMap, const std::vector<Axiom::Trade>& trades, int& selectedIndex, WorkspaceManager& workspaceManager) noexcept {
-    
-    // KORREKTUR: Dynamische Viewport-Berechnung für den Vollbildmodus (40% links / 60% rechts)
-    if (triggerNativeReset) {
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImVec2 targetPos = ImVec2(viewport->WorkPos.x + (viewport->WorkSize.x * 0.40f), viewport->WorkPos.y);
-        ImVec2 targetSize = ImVec2(viewport->WorkSize.x * 0.60f, viewport->WorkSize.y);
-        
-        ImGui::SetNextWindowPos(targetPos, ImGuiCond_Always);
-        ImGui::SetNextWindowSize(targetSize, ImGuiCond_Always);
-    }
-    
-    workspaceManager.BeginWindow(WorkspaceManager::WindowId::WorldMap);
-    const ImVec2 avail = ImGui::GetContentRegionAvail();
-    ImTextureID tex = worldMap.imguiTextureID();
-    if (tex != 0 && avail.x > 8.0f && avail.y > 8.0f){
-        ImGui::Image(tex, avail);
-        const ImVec2 mapMin = ImGui::GetItemRectMin();
-        const ImVec2 mapMax = ImGui::GetItemRectMax();
-        const ImVec2 mapSize = ImVec2(mapMax.x - mapMin.x, mapMax.y - mapMin.y);
-        ImDrawList* dl = ImGui::GetWindowDrawList();
-        dl->PushClipRect(mapMin, mapMax, true);
-        
-        static Axiom::LocationMap geoLocations = {
-            {"EUR/USD", { 8.6821f, 50.1107f}}, // FRA
-            {"USD/JPY", {139.6503f, 35.6762f}}, // TYO
-            {"GBP/USD", { -0.1278f, 51.5074f}}, // LDN
-            {"BTC/USD", { -74.0060f, 40.7128f}} // NYC
-        };
-        const int selectedTradeId = (selectedIndex >= 0 && selectedIndex < (int)trades.size()) ? trades[selectedIndex].id : -1;
-        const std::vector<Axiom::Cluster> clusters = Axiom::buildClusters(trades, geoLocations, selectedTradeId);
-        
-        const ImVec2 mouse = ImGui::GetMousePos();
-        const bool mouseInMap = (mouse.x >= mapMin.x && mouse.x <= mapMax.x && mouse.y >= mapMin.y && mouse.y <= mapMax.y);
-        if (mouseInMap && ImGui::IsMouseClicked(0)) {
-            float bestDist = 1e9f;
-            int bestTradeIndex = -1;
-            for (const auto& c : clusters) {
-                const float u = (c.pos.lon + 180.0f) * (1.0f / 360.0f);
-                const float v = (90.0f - c.pos.lat) * (1.0f / 180.0f);
-                const ImVec2 base = ImVec2(mapMin.x + u * mapSize.x, mapMin.y + v * mapSize.y);
-                const int count = (int)c.tradeIndices.size();
-                float radius = (count <= 1) ? 10.0f : (14.0f + std::min(14.0f, count * 0.8f));
-                const float dx = mouse.x - base.x;
-                const float dy = mouse.y - base.y;
-                const float d2 = dx*dx + dy*dy;
-                if (d2 <= radius*radius && d2 < bestDist) {
-                    bestDist = d2;
-                    // KORREKTUR: Zugriff auf Element 0 aus dem Indizes-Vektor
-                    if (count > 0) bestTradeIndex = c.tradeIndices[0];
-                }
-            }
-            if (bestTradeIndex >= 0 && bestTradeIndex < (int)trades.size()) {
-                selectedIndex = bestTradeIndex;
-            }
-        }
-        
-        for (const auto& c : clusters) {
-            const float u = (c.pos.lon + 180.0f) * (1.0f / 360.0f);
-            const float v = (90.0f - c.pos.lat) * (1.0f / 180.0f);
-            const ImVec2 base = ImVec2(mapMin.x + u * mapSize.x, mapMin.y + v * mapSize.y);
-            const int count = (int)c.tradeIndices.size();
-            const bool hasSelected = c.hasSelected;
-            if (count <= 1) {
-                // KORREKTUR: Zugriff auf Element 0 aus dem Indizes-Vektor
-                int ti = (count == 1) ? c.tradeIndices[0] : -1;
-                if (ti >= 0 && ti < (int)trades.size()) {
-                    const auto& t = trades[ti];
-                    const ImU32 col = (t.side == Axiom::TradeSide::Long) ? IM_COL32(60, 220, 80, 220) : IM_COL32(220, 60, 60, 220);
-                    if (t.side == Axiom::TradeSide::Long) {
-                        dl->AddTriangleFilled(ImVec2(base.x, base.y - 7), ImVec2(base.x - 6, base.y + 4), ImVec2(base.x + 6, base.y + 4), col);
-                    } else {
-                        dl->AddTriangleFilled(ImVec2(base.x, base.y + 7), ImVec2(base.x - 6, base.y - 4), ImVec2(base.x + 6, base.y - 4), col);
-                    }
-                    if (hasSelected) {
-                        dl->AddCircle(base, 12.0f, IM_COL32(255,255,255,230), 16, 2.0f);
-                    }
-                }
-            } else {
-                const float radius = 14.0f + std::min(14.0f, count * 0.8f);
-                const ImU32 colFill = IM_COL32(120, 150, 220, 170);
-                const ImU32 colRing = hasSelected ? IM_COL32(255,255,255,230) : IM_COL32(20,20,25,220);
-                dl->AddCircleFilled(base, radius, colFill, 24);
-                dl->AddCircle(base, radius, colRing, 24, 2.0f);
-                char buf[16];
-                std::snprintf(buf, sizeof(buf), "%d", count);
-                ImVec2 ts = ImGui::CalcTextSize(buf);
-                dl->AddText(ImVec2(base.x - ts.x*0.5f, base.y - ts.y*0.5f), IM_COL32(255,255,255,235), buf);
-            }
-        }
-        dl->PopClipRect();
-    } else {
-        ImGui::TextUnformatted("Weltkarte nicht geladen oder nicht zu Metal hochgeladen.");
-    }
-    
-    // CRITICAL LAYOUT RESET FIX: Schaltet die Flag nach dem Rendern des letzten Fensters hart ab
-    if (triggerNativeReset) {
-        triggerNativeReset = false;
-    }
-    
-    ImGui::End();
+ if (triggerNativeReset) {
+ const ImGuiViewport* viewport = ImGui::GetMainViewport();
+ ImVec2 targetPos = ImVec2(viewport->WorkPos.x + (viewport->WorkSize.x * 0.40f), viewport->WorkPos.y);
+ ImVec2 targetSize = ImVec2(viewport->WorkSize.x * 0.60f, viewport->WorkSize.y);
+ ImGui::SetNextWindowPos(targetPos, ImGuiCond_Always);
+ ImGui::SetNextWindowSize(targetSize, ImGuiCond_Always);
+ }
+ 
+ workspaceManager.BeginWindow(WorkspaceManager::WindowId::WorldMap);
+ const ImVec2 avail = ImGui::GetContentRegionAvail();
+ ImTextureID tex = reinterpret_cast<ImTextureID>(worldMap.textureHandle());
+ if (tex != 0 && avail.x > 8.0f && avail.y > 8.0f){
+ ImGui::Image(tex, avail);
+ const ImVec2 mapMin = ImGui::GetItemRectMin();
+ const ImVec2 mapMax = ImGui::GetItemRectMax();
+ const ImVec2 mapSize = ImVec2(mapMax.x - mapMin.x, mapMax.y - mapMin.y);
+ ImDrawList* dl = ImGui::GetWindowDrawList();
+ dl->PushClipRect(mapMin, mapMax, true);
+ 
+ static Axiom::LocationMap geoLocations = {
+ {"EUR/USD", { 8.6821f, 50.1107f}},
+ {"USD/JPY", {139.6503f, 35.6762f}},
+ {"GBP/USD", { -0.1278f, 51.5074f}},
+ {"BTC/USD", { -74.0060f, 40.7128f}}
+ };
+ const int selectedTradeId = (selectedIndex >= 0 && selectedIndex < (int)trades.size()) ? trades[selectedIndex].id : -1;
+ const std::vector<Axiom::Cluster> clusters = Axiom::buildClusters(trades, geoLocations, selectedTradeId);
+ 
+ const ImVec2 mouse = ImGui::GetMousePos();
+ const bool mouseInMap = (mouse.x >= mapMin.x && mouse.x <= mapMax.x && mouse.y >= mapMin.y && mouse.y <= mapMax.y);
+ if (mouseInMap && ImGui::IsMouseClicked(0)) {
+ float bestDist = 1e9f;
+ int bestTradeIndex = -1;
+ for (const auto& c : clusters) {
+ const float u = (c.pos.lon + 180.0f) * (1.0f / 360.0f);
+ const float v = (90.0f - c.pos.lat) * (1.0f / 180.0f);
+ const ImVec2 base = ImVec2(mapMin.x + u * mapSize.x, mapMin.y + v * mapSize.y);
+ const int count = (int)c.tradeIndices.size();
+ float radius = (count <= 1) ? 10.0f : (14.0f + std::min(14.0f, count * 0.8f));
+ const float dx = mouse.x - base.x;
+ const float dy = mouse.y - base.y;
+ const float d2 = dx*dx + dy*dy;
+ if (d2 <= radius*radius && d2 < bestDist) {
+ bestDist = d2;
+ if (count > 0) bestTradeIndex = static_cast<int>(c.tradeIndices[0]);
+ }
+ }
+ if (bestTradeIndex >= 0 && bestTradeIndex < (int)trades.size()) {
+ selectedIndex = bestTradeIndex;
+ }
+ }
+ 
+ for (const auto& c : clusters) {
+ const float u = (c.pos.lon + 180.0f) * (1.0f / 360.0f);
+ const float v = (90.0f - c.pos.lat) * (1.0f / 180.0f);
+ const ImVec2 base = ImVec2(mapMin.x + u * mapSize.x, mapMin.y + v * mapSize.y);
+ const int count = (int)c.tradeIndices.size();
+ const bool hasSelected = c.hasSelected;
+ if (count <= 1) {
+ int ti = (count == 1) ? static_cast<int>(c.tradeIndices[0]) : -1;
+ if (ti >= 0 && ti < (int)trades.size()) {
+ const auto& t = trades[ti];
+ const ImU32 col = (t.side == Axiom::TradeSide::Long) ? IM_COL32(60, 220, 80, 220) : IM_COL32(220, 60, 60, 220);
+ if (t.side == Axiom::TradeSide::Long) {
+ dl->AddTriangleFilled(ImVec2(base.x, base.y - 7), ImVec2(base.x - 6, base.y + 4), ImVec2(base.x + 6, base.y + 4), col);
+ } else {
+ dl->AddTriangleFilled(ImVec2(base.x, base.y + 7), ImVec2(base.x - 6, base.y - 4), ImVec2(base.x + 6, base.y - 4), col);
+ }
+ if (hasSelected) {
+ dl->AddCircle(base, 12.0f, IM_COL32(255,255,255,230), 16, 2.0f);
+ }
+ }
+ } else {
+ const float radius = 14.0f + std::min(14.0f, count * 0.8f);
+ const ImU32 colFill = IM_COL32(120, 150, 220, 170);
+ const ImU32 colRing = hasSelected ? IM_COL32(255,255,255,230) : IM_COL32(20,20,25,220);
+ dl->AddCircleFilled(base, radius, colFill, 24);
+ dl->AddCircle(base, radius, colRing, 24, 2.0f);
+ char buf[16];
+ std::snprintf(buf, sizeof(buf), "%d", count);
+ ImVec2 ts = ImGui::CalcTextSize(buf);
+ dl->AddText(ImVec2(base.x - ts.x*0.5f, base.y - ts.y*0.5f), IM_COL32(255,255,255,235), buf);
+ }
+ }
+ dl->PopClipRect();
+ } else {
+ ImGui::TextUnformatted("Weltkarte nicht geladen oder nicht zu Metal hochgeladen.");
+ }
+ 
+ if (triggerNativeReset) {
+ triggerNativeReset = false;
+ }
+ ImGui::End();
 }
 
 int main(int argc, char** argv)
 {
-    (void)argc; (void)argv;
-    if (!glfwInit())
-        return 1;
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
-    GLFWwindow* window = glfwCreateWindow(1200, 800, "AXIOM Trader - Stage D1", nullptr, nullptr);
-    if (!window) {
-        glfwTerminate();
-        return 2;
-    }
-    id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-    if (!device) {
-        glfwDestroyWindow(window);
-        glfwTerminate();
-        return 3;
-    }
-    id<MTLCommandQueue> commandQueue = [device newCommandQueue];
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOther(window, true);
-    ImGui_ImplMetal_Init(device);
-    NSWindow* nswin = glfwGetCocoaWindow(window);
-    CAMetalLayer* layer = [CAMetalLayer layer];
-    layer.device = device;
-    layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-    nswin.contentView.layer = layer;
-    nswin.contentView.wantsLayer = YES;
-    
-    MapTexture worldMap;
-    NSString* mapPath = [[NSBundle mainBundle] pathForResource:@"world_map" ofType:@"png"];
-    if (mapPath) {
-        worldMap.loadFromFile(std::string([mapPath UTF8String]), false);
-        worldMap.uploadToMetal((__bridge void*)device);
-    }
-    
-    axiom::db::Connection conn("axiom.db");
-    axiom::db::AssetSpecDao assetDao(conn);
-    axiom::db::TradeDao tradeDao(conn);
-    assetDao.ensureSchema();
-    tradeDao.ensureSchema();
-    
-    std::unordered_map<std::string, axiom::db::AssetSpecRow> assetCache;
-    {
-        auto all = assetDao.getAll();
-        for (auto& s : all) assetCache[s.symbol] = s;
-    }
-    std::vector<Axiom::Trade> trades;
-    {
-        auto rows = tradeDao.loadAll();
-        trades.reserve(rows.size());
-        for (const auto& r : rows) {
-            Axiom::Trade t;
-            applyTradeRow(t, r);
-            if (assetCache.find(t.symbol) == assetCache.end()) {
-                auto def = defaultSpecForSymbol(t.symbol);
-                assetDao.upsert(def);
-                assetCache[t.symbol] = def;
-            }
-            applySpecToTrade(t, assetCache[t.symbol]);
-            trades.push_back(std::move(t));
-        }
-    }
-    
-    // ---- UI State ----
-    int selectedIndex = -1;
-    char assetBuf[32] = "EUR/USD";
-    double entryBuf = 1.0800;
-    double exitBuf = 1.0855;
-    double unitsBuf = 1.0;
-    double pipValuePerLotUsd = 10.0;
-    bool treatNonFxAsUnits = true;
-    
-    WorkspaceManager workspaceManager;
-    AssetSpecEditorState assetEditor;
-    
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-        int w = 0, h = 0;
-        glfwGetFramebufferSize(window, &w, &h);
-        layer.drawableSize = CGSizeMake(w, h);
-        @autoreleasepool {
-            id<CAMetalDrawable> drawable = [layer nextDrawable];
-            if (!drawable) continue;
-            MTLRenderPassDescriptor* rp = [MTLRenderPassDescriptor renderPassDescriptor];
-            
-            // Metal API Bindings
-            rp.colorAttachments[0].texture = drawable.texture;
-            rp.colorAttachments[0].loadAction = MTLLoadActionClear;
-            rp.colorAttachments[0].clearColor = MTLClearColorMake(0.02, 0.02, 0.03, 1.0);
-            rp.colorAttachments[0].storeAction = MTLStoreActionStore;
-            
-            ImGui_ImplMetal_NewFrame(rp);
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
-            
-            // Layout-Trigger abfangen und natives ImGui-Vollbild-Grid setzen (Linke Spalte: 40% Breite)
-            if (triggerNativeReset) {
-                const ImGuiViewport* viewport = ImGui::GetMainViewport();
-                ImGui::SetNextWindowPos(viewport->WorkPos, ImGuiCond_Always);
-                ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x * 0.40f, viewport->WorkSize.y), ImGuiCond_Always);
-            }
-            
-            workspaceManager.BeginWindow(static_cast<WorkspaceManager::WindowId>(0));
-            ImGui::SeparatorText("PnL Settings");
-            ImGui::InputDouble("PipValue USD/Lot##pnl_pipvalue", &pipValuePerLotUsd);
-            ImGui::Checkbox("Non-FX as Units##pnl_nonfx_units", &treatNonFxAsUnits);
-            
-            ImGui::SameLine();
-            if (ImGui::Button("Layout anordnen")) {
-                triggerNativeReset = true; // Aktiviert den einmaligen Layout-Zwangs-Frame
-            }
-            
-            ImGui::SeparatorText("Trades (SQLite)");
-            if (ImGui::BeginTable("Trades", 6, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
-                ImGui::TableSetupColumn("ID");
-                ImGui::TableSetupColumn("Asset");
-                ImGui::TableSetupColumn("Type");
-                ImGui::TableSetupColumn("Δ Price");
-                ImGui::TableSetupColumn("Pips");
-                ImGui::TableSetupColumn("Money");
-                ImGui::TableHeadersRow();
-                for (int i = 0; i < (int)trades.size(); ++i) {
-                    ImGui::PushID(i);
-                    auto& t = trades[i];
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    ImGui::Text("%d", t.id);
-                    ImGui::TableSetColumnIndex(1);
-                    if (ImGui::Selectable(t.symbol.c_str(), selectedIndex == i)) {
-                        selectedIndex = i;
-                        std::snprintf(assetBuf, sizeof(assetBuf), "%s", t.symbol.c_str());
-                        entryBuf = t.entry;
-                        exitBuf = t.exit;
-                        unitsBuf = t.units;
-                    }
-                    ImGui::TableSetColumnIndex(2);
-                    auto it = assetCache.find(t.symbol);
-                    ImGui::Text("%s", (it != assetCache.end()) ? assetTypeLabel(it->second.assetType) : "Unspec");
-                    ImGui::TableSetColumnIndex(3);
-                    ImGui::Text("%.4f", t.priceDelta());
-                    ImGui::TableSetColumnIndex(4);
-                    ImGui::Text("%.1f", t.calculatePips());
-                    ImGui::TableSetColumnIndex(5);
-                    ImGui::Text("%.2f", t.calculatePnL(pipValuePerLotUsd, treatNonFxAsUnits));
-                    ImGui::PopID();
-                }
-                ImGui::EndTable();
-            }
-            
-            ImGui::SeparatorText("Trade Editor");
-            ImGui::InputText("Asset##trade_asset", assetBuf, sizeof(assetBuf));
-            ImGui::InputDouble("Entry##trade_entry", &entryBuf, 0, 0, "%.6f");
-            ImGui::InputDouble("Exit##trade_exit", &exitBuf, 0, 0, "%.6f");
-            ImGui::InputDouble("Units##trade_units", &unitsBuf);
-            std::string curSym(assetBuf);
-            if (assetCache.find(curSym) == assetCache.end()) {
-                auto def = defaultSpecForSymbol(curSym);
-                assetDao.upsert(def);
-                assetCache[curSym] = def;
-            }
-            auto& curSpec = assetCache[curSym];
-            ImGui::TextDisabled("AssetSpec: %s | pip=%.6f | contract=%.2f", assetTypeLabel(curSpec.assetType), curSpec.pipSize, curSpec.contractSize);
-            if (ImGui::Button("Edit AssetSpec##open_assetspec")) {
-                openAssetEditor(assetEditor, curSym, assetDao);
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Add Trade##add_trade")) {
-                Axiom::Trade t;
-                t.id = -1;
-                t.setSymbol(assetBuf);
-                t.entry = entryBuf;
-                t.exit = exitBuf;
-                t.units = unitsBuf;
-                applySpecToTrade(t, curSpec);
-                auto row = toTradeRow(t, true);
-                int64_t newId = tradeDao.insert(row);
-                t.id = (int)newId;
-                trades.push_back(std::move(t));
-                selectedIndex = -1;
-            }
-            ImGui::SameLine();
-            ImGui::BeginDisabled(selectedIndex < 0);
-            if (ImGui::Button("Update Selected##update_trade")) {
-                auto& t = trades[selectedIndex];
-                t.setSymbol(assetBuf);
-                t.entry = entryBuf;
-                t.exit = exitBuf;
-                t.units = unitsBuf;
-                if (assetCache.find(t.symbol) == assetCache.end()) {
-                    auto def = defaultSpecForSymbol(t.symbol);
-                    assetDao.upsert(def);
-                    assetCache[t.symbol] = def;
-                }
-                applySpecToTrade(t, assetCache[t.symbol]);
-                auto row = toTradeRow(t, false);
-                row.id = t.id;
-                tradeDao.update(row);
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Delete Selected##delete_trade")) {
-                int delId = trades[selectedIndex].id;
-                tradeDao.removeById(delId);
-                trades.erase(trades.begin() + selectedIndex);
-                selectedIndex = -1;
-            }
-            ImGui::EndDisabled();
-            
-            ImGui::SeparatorText("Asset Registry (SQLite cached)");
-            if (ImGui::BeginTable("AssetRegistry", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
-                ImGui::TableSetupColumn("Symbol");
-                ImGui::TableSetupColumn("Type");
-                ImGui::TableSetupColumn("Pip");
-                ImGui::TableSetupColumn("Contract");
-                ImGui::TableHeadersRow();
-                for (const auto& kv : assetCache) {
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    ImGui::Text("%s", kv.first.c_str());
-                    ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%s%s", assetTypeLabel(kv.second.assetType), isJpy(kv.second) ? " (JPY)" : "");
-                    ImGui::TableSetColumnIndex(2);
-                    ImGui::Text("%.6f", kv.second.pipSize);
-                    ImGui::TableSetColumnIndex(3);
-                    ImGui::Text("%.2f", kv.second.contractSize);
-                }
-                ImGui::EndTable();
-            }
-            drawAssetEditor(assetEditor, assetDao, assetCache, trades);
-            ImGui::End();
-            
-            DrawWorldMapWindow_Stable(worldMap, trades, selectedIndex, workspaceManager);
-            
-            id<MTLCommandBuffer> cb = [commandQueue commandBuffer];
-            id<MTLRenderCommandEncoder> ce = [cb renderCommandEncoderWithDescriptor:rp];
-            ImGui::Render();
-            ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cb, ce);
-            [ce endEncoding];
-            [cb presentDrawable:drawable];
-            [cb commit];
-        }
-    }
-    ImGui_ImplMetal_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    glfwDestroyWindow(window);
-    glfwTerminate();
-    return 0;
+ (void)argc; (void)argv;
+ if (!glfwInit())
+ return 1;
+ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+ glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
+ GLFWwindow* window = glfwCreateWindow(1200, 800, "AXIOM Trader - Stage D1", nullptr, nullptr);
+ if (!window) {
+ glfwTerminate();
+ return 2;
+ }
+ id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+ if (!device) {
+ glfwDestroyWindow(window);
+ glfwTerminate();
+ return 3;
+ }
+ id<MTLCommandQueue> commandQueue = [device newCommandQueue];
+ IMGUI_CHECKVERSION();
+ ImGui::CreateContext();
+ ImGui::StyleColorsDark();
+ ImGui_ImplGlfw_InitForOther(window, true);
+ ImGui_ImplMetal_Init(device);
+ NSWindow* nswin = glfwGetCocoaWindow(window);
+ CAMetalLayer* layer = [CAMetalLayer layer];
+ layer.device = device;
+ layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+ nswin.contentView.layer = layer;
+ nswin.contentView.wantsLayer = YES;
+ 
+ MapTexture worldMap;
+ NSString* mapPath = [[NSBundle mainBundle] pathForResource:@"world_map" ofType:@"png"];
+ if (mapPath) {
+ worldMap.loadFromFile(std::string([mapPath UTF8String]), false);
+ worldMap.uploadToMetal((__bridge void*)device);
+ }
+ 
+ axiom::db::Connection conn("axiom.db");
+ axiom::db::AssetSpecDao assetDao(conn);
+ axiom::db::TradeDao tradeDao(conn);
+ assetDao.ensureSchema();
+ tradeDao.ensureSchema();
+ 
+ std::unordered_map<std::string, axiom::db::AssetSpecRow> assetCache;
+ {
+ auto all = assetDao.getAll();
+ for (auto& s : all) assetCache[s.symbol] = s;
+ }
+ std::vector<Axiom::Trade> trades;
+ {
+ auto rows = tradeDao.loadAll();
+ trades.reserve(rows.size());
+ for (const auto& r : rows) {
+ Axiom::Trade t;
+ applyTradeRow(t, r);
+ if (assetCache.find(t.symbol) == assetCache.end()) {
+ auto def = defaultSpecForSymbol(t.symbol);
+ assetDao.upsert(def);
+ assetCache[t.symbol] = def;
+ }
+ applySpecToTrade(t, assetCache[t.symbol]);
+ trades.push_back(std::move(t));
+ }
+ }
+ 
+ int selectedIndex = -1;
+ // ✅ KORREKTUR: Korrekte Array-Initialisierung für C-String Puffer
+ char assetBuf[32] = "EUR/USD";
+ double entryBuf = 1.0800;
+ double exitBuf = 1.0855;
+ double unitsBuf = 1.0;
+ double pipValuePerLotUsd = 10.0;
+ bool treatNonFxAsUnits = true;
+ 
+ WorkspaceManager workspaceManager;
+ AssetSpecEditorState assetEditor;
+ 
+ while (!glfwWindowShouldClose(window)) {
+ glfwPollEvents();
+ int w = 0, h = 0;
+ glfwGetFramebufferSize(window, &w, &h);
+ layer.drawableSize = CGSizeMake(w, h);
+ @autoreleasepool {
+ id<CAMetalDrawable> drawable = [layer nextDrawable];
+ if (!drawable) continue;
+ MTLRenderPassDescriptor* rp = [MTLRenderPassDescriptor renderPassDescriptor];
+ 
+ // ✅ KORREKTUR: Array-Index [0] für Metal colorAttachments ergänzt
+ rp.colorAttachments[0].texture = drawable.texture;
+ rp.colorAttachments[0].loadAction = MTLLoadActionClear;
+ rp.colorAttachments[0].clearColor = MTLClearColorMake(0.02, 0.02, 0.03, 1.0);
+ rp.colorAttachments[0].storeAction = MTLStoreActionStore;
+ 
+ ImGui_ImplMetal_NewFrame(rp);
+ ImGui_ImplGlfw_NewFrame();
+ ImGui::NewFrame();
+ 
+ if (triggerNativeReset) {
+ const ImGuiViewport* viewport = ImGui::GetMainViewport();
+ ImGui::SetNextWindowPos(viewport->WorkPos, ImGuiCond_Always);
+ ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x * 0.40f, viewport->WorkSize.y), ImGuiCond_Always);
+ }
+ 
+ workspaceManager.BeginWindow(static_cast<WorkspaceManager::WindowId>(0));
+ ImGui::SeparatorText("PnL Settings");
+ ImGui::InputDouble("PipValue USD/Lot##pnl_pipvalue", &pipValuePerLotUsd);
+ ImGui::Checkbox("Non-FX as Units##pnl_nonfx_units", &treatNonFxAsUnits);
+ 
+ ImGui::SameLine();
+ if (ImGui::Button("Layout anordnen")) {
+ triggerNativeReset = true;
+ }
+ 
+ ImGui::SeparatorText("Trades (SQLite)");
+ if (ImGui::BeginTable("Trades", 6, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
+ ImGui::TableSetupColumn("ID");
+ ImGui::TableSetupColumn("Asset");
+ ImGui::TableSetupColumn("Type");
+ ImGui::TableSetupColumn("Delta Price");
+ ImGui::TableSetupColumn("Pips");
+ ImGui::TableSetupColumn("Money");
+ ImGui::TableHeadersRow();
+ for (int i = 0; i < (int)trades.size(); ++i) {
+ ImGui::PushID(i);
+ auto& t = trades[i];
+ ImGui::TableNextRow();
+ ImGui::TableSetColumnIndex(0);
+ ImGui::Text("%d", t.id);
+ ImGui::TableSetColumnIndex(1);
+ if (ImGui::Selectable(t.symbol.c_str(), selectedIndex == i)) {
+ selectedIndex = i;
+ std::snprintf(assetBuf, sizeof(assetBuf), "%s", t.symbol.c_str());
+ entryBuf = t.entry.to_double();
+ exitBuf = t.exit.to_double();
+ unitsBuf = t.units.to_double();
+ }
+ ImGui::TableSetColumnIndex(2);
+ auto it = assetCache.find(t.symbol);
+ ImGui::Text("%s", (it != assetCache.end()) ? assetTypeLabel(it->second.assetType) : "Unspec");
+ ImGui::TableSetColumnIndex(3);
+ ImGui::Text("%.4f", t.priceDelta().to_double());
+ ImGui::TableSetColumnIndex(4);
+ ImGui::Text("%.1f", t.calculatePips().to_double());
+ ImGui::TableSetColumnIndex(5);
+ core::utils::Money pipValMoney = core::utils::Money(static_cast<int64_t>(pipValuePerLotUsd));
+ ImGui::Text("%.2f", t.calculatePnL(pipValMoney, treatNonFxAsUnits).to_double());
+ ImGui::PopID();
+ }
+ ImGui::EndTable();
+ }
+ 
+ ImGui::SeparatorText("Trade Editor");
+ ImGui::InputText("Asset##trade_asset", assetBuf, sizeof(assetBuf));
+ ImGui::InputDouble("Entry##trade_entry", &entryBuf, 0, 0, "%.6f");
+ ImGui::InputDouble("Exit##trade_exit", &exitBuf, 0, 0, "%.6f");
+ ImGui::InputDouble("Units##trade_units", &unitsBuf);
+ std::string curSym(assetBuf);
+ if (assetCache.find(curSym) == assetCache.end()) {
+ auto def = defaultSpecForSymbol(curSym);
+ assetDao.upsert(def);
+ assetCache[curSym] = def;
+ }
+ auto& curSpec = assetCache[curSym];
+ double dispPip = static_cast<double>(curSpec.pipSizeRaw) / 10000.0;
+ double dispContract = static_cast<double>(curSpec.contractSizeRaw) / 10000.0;
+ ImGui::TextDisabled("AssetSpec: %s | pip=%.6f | contract=%.2f", assetTypeLabel(curSpec.assetType), dispPip, dispContract);
+ if (ImGui::Button("Edit AssetSpec##open_assetspec")) {
+ openAssetEditor(assetEditor, curSym, assetDao);
+ }
+ ImGui::SameLine();
+ if (ImGui::Button("Add Trade##add_trade")) {
+ Axiom::Trade t;
+ t.id = -1;
+ t.setSymbol(assetBuf);
+ t.entry = core::utils::Money(static_cast<int64_t>(entryBuf));
+ t.exit = core::utils::Money(static_cast<int64_t>(exitBuf));
+ t.units = core::utils::Money(static_cast<int64_t>(unitsBuf));
+ applySpecToTrade(t, curSpec);
+ auto row = toTradeRow(t, true);
+ int64_t newId = tradeDao.insert(row);
+ t.id = (int)newId;
+ trades.push_back(std::move(t));
+ selectedIndex = -1;
+ }
+ ImGui::SameLine();
+ ImGui::BeginDisabled(selectedIndex < 0);
+ if (ImGui::Button("Update Selected##update_trade")) {
+ auto& t = trades[selectedIndex];
+ t.setSymbol(assetBuf);
+ t.entry = core::utils::Money(static_cast<int64_t>(entryBuf));
+ t.exit = core::utils::Money(static_cast<int64_t>(exitBuf));
+ t.units = core::utils::Money(static_cast<int64_t>(unitsBuf));
+ if (assetCache.find(t.symbol) == assetCache.end()) {
+ auto def = defaultSpecForSymbol(t.symbol);
+ assetDao.upsert(def);
+ assetCache[t.symbol] = def;
+ }
+ applySpecToTrade(t, assetCache[t.symbol]);
+ auto row = toTradeRow(t, false);
+ row.id = t.id;
+ tradeDao.update(row);
+ }
+ ImGui::SameLine();
+ if (ImGui::Button("Delete Selected##delete_trade")) {
+ int delId = trades[selectedIndex].id;
+ tradeDao.removeById(delId);
+ trades.erase(trades.begin() + selectedIndex);
+ selectedIndex = -1;
+ }
+ ImGui::EndDisabled();
+ 
+ ImGui::SeparatorText("Asset Registry (SQLite cached)");
+ if (ImGui::BeginTable("AssetRegistry", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
+ ImGui::TableSetupColumn("Symbol");
+ ImGui::TableSetupColumn("Type");
+ ImGui::TableSetupColumn("Pip");
+ ImGui::TableSetupColumn("Contract");
+ ImGui::TableHeadersRow();
+ for (const auto& kv : assetCache) {
+ ImGui::TableNextRow();
+ ImGui::TableSetColumnIndex(0);
+ ImGui::Text("%s", kv.first.c_str());
+ ImGui::TableSetColumnIndex(1);
+ ImGui::Text("%s%s", assetTypeLabel(kv.second.assetType), isJpy(kv.second) ? " (JPY)" : "");
+ ImGui::TableSetColumnIndex(2);
+ ImGui::Text("%.6f", static_cast<double>(kv.second.pipSizeRaw) / 10000.0);
+ ImGui::TableSetColumnIndex(3);
+ ImGui::Text("%.2f", static_cast<double>(kv.second.contractSizeRaw) / 10000.0);
+ }
+ ImGui::EndTable();
+ }
+ drawAssetEditor(assetEditor, assetDao, assetCache, trades);
+ ImGui::End();
+ 
+ DrawWorldMapWindow_Stable(worldMap, trades, selectedIndex, workspaceManager);
+ 
+ id<MTLCommandBuffer> cb = [commandQueue commandBuffer];
+ id<MTLRenderCommandEncoder> ce = [cb renderCommandEncoderWithDescriptor:rp];
+ ImGui::Render();
+ ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cb, ce);
+ [ce endEncoding];
+ [cb presentDrawable:drawable];
+ [cb commit];
+ }
+ }
+ ImGui_ImplMetal_Shutdown();
+ ImGui_ImplGlfw_Shutdown();
+ ImGui::DestroyContext();
+ glfwDestroyWindow(window);
+ glfwTerminate();
+ return 0;
 }
 

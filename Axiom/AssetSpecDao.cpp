@@ -1,5 +1,8 @@
-#include "AssetSpecDao.hpp"
-#include <cmath>
+#include "../Axiom/AssetSpecDao.hpp" // <-- Mit relativer Pfad-Eskalation absichern!
+#include "../Axiom/DbModels.hpp"
+#include <cstdint>
+#include <stdexcept>
+#include <sqlite3.h>
 
 namespace axiom::db {
 
@@ -32,10 +35,7 @@ R"SQL(
 SELECT 1 FROM AssetSpec WHERE symbol = ? LIMIT 1
 )SQL";
 
-AssetSpecDao::AssetSpecDao(Connection& c)
-: c_(c)
-{
-}
+AssetSpecDao::AssetSpecDao(Connection& c) : c_(c) {}
 
 void AssetSpecDao::prepareStatements()
 {
@@ -67,11 +67,8 @@ void AssetSpecDao::upsert(const AssetSpecRow& r)
  st.reset();
  st.bindText(1, r.symbol);
  st.bindInt(2, static_cast<int>(r.assetType));
- 
- // Skalierung auf INTEGER (value * 10000)
- st.bindInt64(3, static_cast<int64_t>(std::round(r.pipSize * 10000.0)));
- st.bindInt64(4, static_cast<int64_t>(std::round(r.contractSize * 10000.0)));
- 
+ st.bindInt64(3, r.pipSizeRaw);
+ st.bindInt64(4, r.contractSizeRaw);
  st.bindInt64(5, r.createdAt);
  st.step();
 }
@@ -86,11 +83,8 @@ std::optional<AssetSpecRow> AssetSpecDao::getBySymbol(const std::string& symbol)
  AssetSpecRow r;
  r.symbol = st.colText(0);
  r.assetType = static_cast<AssetType>(st.colInt(1));
- 
- // Zurückskalierung auf double (stored / 10000.0)
- r.pipSize = st.colInt64(2) / 10000.0;
- r.contractSize = st.colInt64(3) / 10000.0;
- 
+ r.pipSizeRaw = st.colInt64(2);
+ r.contractSizeRaw = st.colInt64(3);
  r.createdAt = st.colInt64(4);
  return r;
  }
@@ -107,11 +101,8 @@ std::vector<AssetSpecRow> AssetSpecDao::getAll()
  AssetSpecRow r;
  r.symbol = st.colText(0);
  r.assetType = static_cast<AssetType>(st.colInt(1));
- 
- // Zurückskalierung auf double
- r.pipSize = st.colInt64(2) / 10000.0;
- r.contractSize = st.colInt64(3) / 10000.0;
- 
+ r.pipSizeRaw = st.colInt64(2);
+ r.contractSizeRaw = st.colInt64(3);
  r.createdAt = st.colInt64(4);
  out.push_back(std::move(r));
  }

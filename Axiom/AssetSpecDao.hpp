@@ -1,17 +1,21 @@
-#pragma once
-#include "Sqlite.hpp"
-#include "DbModels.hpp"
-#include <optional>
+#ifndef AXIOM_DB_ASSET_SPEC_DAO_HPP
+#define AXIOM_DB_ASSET_SPEC_DAO_HPP
+
+#include <string>
 #include <vector>
+#include <optional>
+#include <cstdint>
+#include "Axiom/Sqlite.hpp" // ✅ Macht Statement und Connection vollständig verfügbar
 
 namespace axiom::db {
+
+struct AssetSpecRow;
 
 class AssetSpecDao {
 public:
     explicit AssetSpecDao(Connection& c);
-
+    
     void ensureSchema();
-
     void upsert(const AssetSpecRow& r);
     std::optional<AssetSpecRow> getBySymbol(const std::string& symbol);
     std::vector<AssetSpecRow> getAll();
@@ -28,3 +32,6 @@ private:
 };
 
 } // namespace axiom::db
+
+#endif // AXIOM_DB_ASSET_SPEC_DAO_HPP
+

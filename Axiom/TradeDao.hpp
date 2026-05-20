@@ -1,33 +1,32 @@
-#pragma once
+#ifndef AXIOM_TRADE_DAO_HPP
+#define AXIOM_TRADE_DAO_HPP
 
-#include "Sqlite.hpp"
-#include "DbModels.hpp"
-
-#include <optional>
 #include <string>
 #include <vector>
+#include <optional>
+#include <cstdint>
+#include "Sqlite.hpp" // Ohne Axiom/-Präfix laden!
 
 namespace axiom::db {
+
+struct TradeRow;
 
 class TradeDao {
 public:
     explicit TradeDao(Connection& c);
-
+    
     void ensureSchema();
-
-    int64_t insert(TradeRow row);              // returns new id
-    void update(const TradeRow& row);          // by id
+    int64_t insert(TradeRow r);
+    void update(const TradeRow& r);
     std::optional<TradeRow> getById(int64_t id);
-    std::vector<TradeRow> loadAll();           // for initial hydration
+    std::vector<TradeRow> loadAll();
     std::vector<TradeRow> loadBySymbol(const std::string& symbol);
     void removeById(int64_t id);
 
 private:
-    void prepareStatements();                  // <-- neu: lazy prepare nach ensureSchema()
+    void prepareStatements();
 
     Connection& c_;
-
-    // Lazy prepared statements (erst nach ensureSchema / prepareStatements verfügbar)
     std::optional<Statement> stInsert_;
     std::optional<Statement> stUpdate_;
     std::optional<Statement> stGetById_;
@@ -37,3 +36,6 @@ private:
 };
 
 } // namespace axiom::db
+
+#endif // AXIOM_TRADE_DAO_HPP
+

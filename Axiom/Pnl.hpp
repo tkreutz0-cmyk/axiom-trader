@@ -1,5 +1,6 @@
 #pragma once
 #include "Axiom/Trade.hpp"
+#include "src/core/utils/fixed_point.hpp"
 
 namespace Axiom {
 
@@ -10,26 +11,26 @@ enum class PnlMode {
 };
 
 struct PnlParams {
-    double pipValuePerLotUsd = 10.0;
+    // ✅ PRIO 2: Parameter nutzen native Money-Instanzen
+    core::utils::Money pipValuePerLotUsd = core::utils::Money(10);
     bool treatNonFxAsUnits = true;
 };
 
-// Zentrale Umschaltlogik – KEINE Berechnung hier neu erfinden
-inline double calculatePnLByMode(const Trade& t,
-                                 PnlMode mode,
-                                 const PnlParams& p) noexcept
+[[nodiscard]] inline core::utils::Money calculatePnLByMode(
+    const Trade& t,
+    PnlMode mode,
+    const PnlParams& p) noexcept
 {
     switch (mode) {
         case PnlMode::PriceDelta:
             return t.priceDelta();
-
         case PnlMode::Pips:
             return t.calculatePips();
-
         case PnlMode::Money:
             return t.calculatePnL(p.pipValuePerLotUsd, p.treatNonFxAsUnits);
     }
-    return 0.0; // defensive default
+    return core::utils::Money::from_raw(0); // Defensiver, allokationsfreier Standardwert
 }
 
 } // namespace Axiom
+

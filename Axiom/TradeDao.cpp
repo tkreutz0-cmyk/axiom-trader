@@ -1,5 +1,10 @@
-#include "TradeDao.hpp"
-#include <cmath>
+// ✅ KORREKTUR: Expliziter, lokaler Include verhindert Präprozessor-Schleifen
+#include "../Axiom/TradeDao.hpp"
+#include "../Axiom/DbModels.hpp"
+#include "src/core/utils/fixed_point.hpp" // Holt core::utils::Money
+#include <cstdint>
+#include <stdexcept>
+#include <sqlite3.h>
 
 namespace axiom::db {
 
@@ -66,16 +71,13 @@ static TradeRow readTradeRow(Statement& st) {
  r.id = st.colInt64(0);
  r.symbol = st.colText(1);
  r.side = static_cast<TradeSide>(st.colInt(2));
- 
- // Zurückskalierung von INTEGER auf double
- r.entryPrice = st.colInt64(3) / 10000.0;
+ r.entryPriceRaw = st.colInt64(3);
  if (st.colIsNull(4)) {
- r.exitPrice = std::nullopt;
+ r.exitPriceRaw = std::nullopt;
  } else {
- r.exitPrice = st.colInt64(4) / 10000.0;
+ r.exitPriceRaw = st.colInt64(4);
  }
- r.quantity = st.colInt64(5) / 10000.0;
- 
+ r.quantityRaw = st.colInt64(5);
  r.entryTime = st.colInt64(6);
  if (st.colIsNull(7)) r.exitTime = std::nullopt;
  else r.exitTime = st.colInt64(7);
@@ -87,10 +89,7 @@ static TradeRow readTradeRow(Statement& st) {
  return r;
 }
 
-TradeDao::TradeDao(Connection& c)
-: c_(c)
-{
-}
+TradeDao::TradeDao(Connection& c) : c_(c) {}
 
 void TradeDao::prepareStatements()
 {
@@ -134,16 +133,13 @@ int64_t TradeDao::insert(TradeRow r)
  st.reset();
  st.bindText(1, r.symbol);
  st.bindInt(2, static_cast<int>(r.side));
- 
- // Skalierung auf INTEGER (value * 10000)
- st.bindInt64(3, static_cast<int64_t>(std::round(r.entryPrice * 10000.0)));
- if (r.exitPrice) {
- st.bindInt64(4, static_cast<int64_t>(std::round(*r.exitPrice * 10000.0)));
+ st.bindInt64(3, r.entryPriceRaw);
+ if (r.exitPriceRaw) {
+ st.bindInt64(4, *(r.exitPriceRaw));
  } else {
  st.bindNull(4);
  }
- st.bindInt64(5, static_cast<int64_t>(std::round(r.quantity * 10000.0)));
- 
+ st.bindInt64(5, r.quantityRaw);
  st.bindInt64(6, r.entryTime);
  if (r.exitTime) st.bindInt64(7, *r.exitTime);
  else st.bindNull(7);
@@ -163,16 +159,13 @@ void TradeDao::update(const TradeRow& r)
  st.reset();
  st.bindText(1, r.symbol);
  st.bindInt(2, static_cast<int>(r.side));
- 
- // Skalierung auf INTEGER (value * 10000)
- st.bindInt64(3, static_cast<int64_t>(std::round(r.entryPrice * 10000.0)));
- if (r.exitPrice) {
- st.bindInt64(4, static_cast<int64_t>(std::round(*r.exitPrice * 10000.0)));
+ st.bindInt64(3, r.entryPriceRaw);
+ if (r.exitPriceRaw) {
+ st.bindInt64(4, *(r.exitPriceRaw));
  } else {
  st.bindNull(4);
  }
- st.bindInt64(5, static_cast<int64_t>(std::round(r.quantity * 10000.0)));
- 
+ st.bindInt64(5, r.quantityRaw);
  st.bindInt64(6, r.entryTime);
  if (r.exitTime) st.bindInt64(7, *r.exitTime);
  else st.bindNull(7);
