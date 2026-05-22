@@ -127,3 +127,20 @@ BUILD LOG: RE-ENABLING WORKSPACE ARRANGEMENT (Stage D1.1)
   * Disambiguated WindowId conflict against standard int main() using explicit typing.
 - Status: Build Succeeded. Symmetrical layout grid triggers correctly on button press.
 
+## 2026-05-22 — Stage D1.2: Behebung kritischer Review-Mängel & Architektur-Stabilisierung
+
+### Kontext
+Nach einem detaillierten Architektur-Review wurden kritische Fehler in der Typisierung, der Erkennungslogik und der UI-Formatierung identifiziert, die zu Systeminstabilitäten (Undefined Behavior) und mathematischen Diskrepanzen führten.
+
+### Änderungen
+- **Axiom/PnlFormatter.hpp**: Typ-Mismatch bei `snprintf` behoben. `core::utils::Money` wird nun explizit via `.to_double()` für die visuelle UI-Boundary konvertiert (Verhinderung von Runtime-Crashes).
+- **Axiom/AssetSpecIntegration.hpp**: JPY-Erkennungsheuristik (`< 1000`) durch präzisen, diskreten Vergleich (`pipSizeRaw == 100`) ersetzt. 
+- **include/JournalEntry.h**: `double price` in `TradePin` restriktiv durch `core::utils::Money` ersetzt, um das absolute Floating-Point-Verbot nach ADR-0004 im gesamten Core-Umfeld durchzusetzen.
+- **Axiom/DbModels.hpp**: Uninitialisierte Primitivtypen (`int64_t`) in `AssetSpecRow` mit sicheren Nullwerten vorbelegt (`= 0`).
+- **include/ui/WorldRenderer.hpp**: In den Namespace `Axiom::ui` migriert. Die reine Projektionsmathematik wurde in die hotpath-safe Funktion `projectCoordinates` extrahiert und strikt vom Dear ImGui-Zeichenloop entkoppelt.
+- **Axiom/TradeMapping.hpp**: Das statische `Venue -> Geo` Mapping wurde aus dem Hydrierungsprozess extrahiert und in einen allokationsfreien Mapping-Layer ausgelagert.
+
+### Resultat
+- ✅ Build clean und fehlerfrei kompilierbar (Arm64 / Xcode)
+- ✅ Alle deterministischen Invarianten der Test-Suite laufen erfolgreich durch
+- ✅ Core-Isolation vollständig gewahrt; keine UI-Typen lecken in den mathematischen Kern

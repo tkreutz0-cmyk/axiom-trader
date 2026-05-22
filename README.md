@@ -19,10 +19,12 @@ The system follows a **simulation-first philosophy**:
 
 AXIOM-Trader is built around a **deterministic domain kernel**:
 
-- ✅ Pure C++20 domain logic (platform-independent)
-- ✅ Strict UI decoupling (no ImGui/Metal in core)
-- ✅ Reproducible calculations (PnL, pips, clustering)
-- ✅ Explicit data flow:  
+- ✅ Pure C++20 Domänen-Kernel (100% plattformunabhängig)
+- ✅ Striktes, unumstößliches Verbot von `float`/`double` für monetäre Werte (ADR-0004)
+- ✅ Konvertierungen an der UI-Grenze erfolgen ausschließlich explizit über `.to_double()`
+- ✅ Keine UI-Framework-Header (wie `imgui.h`) innerhalb logischer Kern-Namespaces
+- ✅ Expliziter Datenfluss: SQLite → Core → Transformation/Mapping → UI → Rendering
+
   **SQLite → Core → Transformation → UI → Rendering**
 
 Key principles:
